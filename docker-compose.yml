@@ -4,10 +4,10 @@ services:
     image: mysql:8.0
     restart: always
     environment:
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: mysql
+      MYSQL_ROOT_PASSWORD: farmranding123
+      MYSQL_PASSWORD: farmranding123
+      MYSQL_DATABASE: farmranding
     volumes:
       - ./farmranding-db/mysql:/var/lib/mysql
     ports:
