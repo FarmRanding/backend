@@ -1,0 +1,21 @@
+services:
+  mysql:
+    container_name: fr-mysql
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    volumes:
+      - ./farmranding-db/mysql:/var/lib/mysql
+    ports:
+      - 3307:3306
+    networks:
+      - farmranding
+
+
+networks:
+  farmranding:
+    driver: bridge
