@@ -50,11 +50,17 @@ public record BrandingProjectResponse(
         @Schema(description = "생성된 브랜드명", example = "김씨농장 프리미엄 토마토")
         String generatedBrandName,
         
-        @Schema(description = "브랜드 스토리 (JSON)")
+        @Schema(description = "홍보 문구", example = "김씨농장 프리미엄 토마토와 함께하는 건강한 삶")
+        String promotionText,
+        
+        @Schema(description = "브랜드 스토리", example = "3대째 이어온 전통 농법으로 정성스럽게 키운 프리미엄 토마토입니다.")
         String brandStory,
         
-        @Schema(description = "브랜드 컨셉 (JSON)")
+        @Schema(description = "브랜드 컨셉", example = "자연 그대로의 맛과 영양을 담은 프리미엄 농산물 브랜드")
         String brandConcept,
+        
+        @Schema(description = "브랜드 이미지 URL", example = "https://storage.farmranding.com/brands/12345.png")
+        String brandImageUrl,
         
         @Schema(description = "프로젝트 상태", example = "IN_PROGRESS")
         BrandingStatus status,
@@ -64,6 +70,12 @@ public record BrandingProjectResponse(
         
         @Schema(description = "진행률 (%)", example = "30")
         Integer progressPercentage,
+        
+        @Schema(description = "이미지 보유 여부", example = "true")
+        Boolean hasImage,
+        
+        @Schema(description = "완전 완료 여부", example = "false")
+        Boolean isFullyCompleted,
         
         @Schema(description = "생성일시", example = "2024-01-15T10:30:00")
         LocalDateTime createdAt,
@@ -86,11 +98,15 @@ public record BrandingProjectResponse(
                 project.getGapNumber(),
                 project.getIsGapVerified(),
                 project.getGeneratedBrandName(),
+                project.getPromotionText(),
                 project.getBrandStory(),
                 project.getBrandConcept(),
+                project.getBrandImageUrl(),
                 project.getStatus(),
                 project.getCurrentStep(),
                 project.getProgressPercentage(),
+                project.hasImage(),
+                project.isFullyCompleted(),
                 project.getCreatedAt(),
                 project.getUpdatedAt()
         );

@@ -63,13 +63,18 @@ public class BrandingProject extends BaseEntity {
     @Column(name = "generated_brand_name")
     private String generatedBrandName;
     
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "brand_story", columnDefinition = "JSON")
+    @Column(name = "promotion_text", columnDefinition = "TEXT")
+    private String promotionText;
+    
+    @Column(name = "brand_story", columnDefinition = "TEXT")
     private String brandStory;
     
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "brand_concept", columnDefinition = "JSON")
+    @Column(name = "brand_concept", columnDefinition = "TEXT")
     private String brandConcept;
+    
+    // 생성된 브랜드 이미지
+    @Column(name = "brand_image_url")
+    private String brandImageUrl;
     
     // 프로젝트 상태 및 진행 정보
     @Enumerated(EnumType.STRING)
@@ -112,12 +117,25 @@ public class BrandingProject extends BaseEntity {
         this.currentStep = BrandingStep.BRAND_NAME_GENERATION;
     }
     
-    public void completeBranding(String generatedBrandName, String brandStory, String brandConcept) {
+    public void completeBranding(String generatedBrandName, String promotionText, 
+                               String brandStory, String brandConcept, String brandImageUrl) {
         this.generatedBrandName = generatedBrandName;
+        this.promotionText = promotionText;
         this.brandStory = brandStory;
         this.brandConcept = brandConcept;
+        this.brandImageUrl = brandImageUrl;
         this.currentStep = BrandingStep.COMPLETE;
         this.status = BrandingStatus.COMPLETED;
+    }
+    
+    public void updateBrandTexts(String promotionText, String brandStory, String brandConcept) {
+        this.promotionText = promotionText;
+        this.brandStory = brandStory;
+        this.brandConcept = brandConcept;
+    }
+    
+    public void updateBrandImage(String brandImageUrl) {
+        this.brandImageUrl = brandImageUrl;
     }
     
     public void updateStatus(BrandingStatus status) {
@@ -140,5 +158,16 @@ public class BrandingProject extends BaseEntity {
     
     public int getProgressPercentage() {
         return this.currentStep.getProgressPercentage();
+    }
+    
+    public boolean hasImage() {
+        return brandImageUrl != null;
+    }
+    
+    public boolean isFullyCompleted() {
+        return status == BrandingStatus.COMPLETED && 
+               generatedBrandName != null && 
+               promotionText != null && 
+               brandStory != null;
     }
 } 

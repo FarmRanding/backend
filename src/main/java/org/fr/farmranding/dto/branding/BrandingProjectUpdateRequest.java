@@ -2,12 +2,14 @@ package org.fr.farmranding.dto.branding;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Size;
+import org.fr.farmranding.entity.branding.BrandingStatus;
+import org.fr.farmranding.entity.branding.BrandingStep;
 import org.fr.farmranding.entity.branding.Grade;
 
 @Schema(description = "브랜딩 프로젝트 수정 요청 DTO")
 public record BrandingProjectUpdateRequest(
         
-        @Size(min = 2, max = 100, message = "프로젝트 제목은 2자 이상 100자 이하여야 합니다.")
+        @Size(min = 2, max = 100, message = "제목은 2자 이상 100자 이하여야 합니다.")
         @Schema(description = "프로젝트 제목", example = "김씨농장 유기농 토마토 브랜딩")
         String title,
         
@@ -42,7 +44,28 @@ public record BrandingProjectUpdateRequest(
         @Schema(description = "GAP 인증 여부", example = "true")
         Boolean isGapVerified,
         
-        @Size(max = 100, message = "생성된 브랜드명은 100자 이하여야 합니다.")
+        @Size(max = 100, message = "브랜드명은 100자 이하여야 합니다.")
         @Schema(description = "생성된 브랜드명", example = "김씨농장 프리미엄 토마토")
-        String generatedBrandName
+        String generatedBrandName,
+        
+        @Size(max = 500, message = "홍보 문구는 500자 이하여야 합니다.")
+        @Schema(description = "홍보 문구", example = "김씨농장 프리미엄 토마토와 함께하는 건강한 삶")
+        String promotionText,
+        
+        @Size(max = 2000, message = "브랜드 스토리는 2000자 이하여야 합니다.")
+        @Schema(description = "브랜드 스토리", example = "3대째 이어온 전통 농법으로 정성스럽게 키운 프리미엄 토마토입니다.")
+        String brandStory,
+        
+        @Size(max = 1000, message = "브랜드 컨셉은 1000자 이하여야 합니다.")
+        @Schema(description = "브랜드 컨셉", example = "자연 그대로의 맛과 영양을 담은 프리미엄 농산물 브랜드")
+        String brandConcept,
+        
+        @Schema(description = "브랜드 이미지 URL", example = "https://storage.farmranding.com/brands/12345.png")
+        String brandImageUrl,
+        
+        @Schema(description = "프로젝트 상태", example = "IN_PROGRESS")
+        BrandingStatus status,
+        
+        @Schema(description = "현재 진행 단계", example = "BRANDING_KEYWORDS")
+        BrandingStep currentStep
 ) {} 
