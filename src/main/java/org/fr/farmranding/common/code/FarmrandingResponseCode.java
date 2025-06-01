@@ -37,6 +37,11 @@ public enum FarmrandingResponseCode {
     VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "FR303", "유효성 검증에 실패했습니다"),
     BAD_JSON_FORMAT(HttpStatus.BAD_REQUEST, "FR304", "잘못된 JSON 형식입니다"),
     
+    // MEMBERSHIP & USAGE
+    ALREADY_PRO_MEMBERSHIP(HttpStatus.BAD_REQUEST, "FR401", "이미 프로 멤버십 사용자입니다"),
+    AI_BRANDING_USAGE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "FR402", "AI 브랜딩 사용 한도를 초과했습니다"),
+    PRICING_USAGE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "FR403", "가격 제안 사용 한도를 초과했습니다"),
+    
     // SERVER ERROR
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "FR500", "서버 내부 오류가 발생했습니다"),
     EXTERNAL_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "FR501", "외부 API 호출에 실패했습니다");

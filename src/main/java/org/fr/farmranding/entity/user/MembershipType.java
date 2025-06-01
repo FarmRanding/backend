@@ -20,4 +20,8 @@ public enum MembershipType {
     public boolean isProMembership() {
         return this == PRO;
     }
+    
+    public boolean isPro() {
+        return this == PRO;
+    }
 } 

@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.fr.farmranding.common.entity.BaseEntity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -45,9 +48,33 @@ public class User extends BaseEntity {
     @Builder.Default
     private Integer pricingSuggestionUsageCount = 0;
     
+    @Column(name = "farm_name")
+    private String farmName;
+    
+    @Column(name = "location")
+    private String location;
+    
+    @Column(name = "phone_number")
+    private String phoneNumber;
+    
+    @Column(name = "farm_description", columnDefinition = "TEXT")
+    private String farmDescription;
+    
+    @Column(name = "established_year")
+    private Integer establishedYear;
+    
     public void updateProfile(String nickname, String profileImage) {
         this.nickname = nickname;
         this.profileImage = profileImage;
+    }
+    
+    public void updateFarmInfo(String farmName, String location, String phoneNumber, 
+                              String farmDescription, Integer establishedYear) {
+        this.farmName = farmName;
+        this.location = location;
+        this.phoneNumber = phoneNumber;
+        this.farmDescription = farmDescription;
+        this.establishedYear = establishedYear;
     }
     
     public void upgradeToProMembership() {
@@ -74,5 +101,10 @@ public class User extends BaseEntity {
             return true;
         }
         return pricingSuggestionUsageCount < MembershipType.FREE.getPricingSuggestionLimit();
+    }
+    
+    public void resetUsageCounts() {
+        this.aiBrandingUsageCount = 0;
+        this.pricingSuggestionUsageCount = 0;
     }
 } 
