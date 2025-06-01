@@ -28,12 +28,6 @@ public class MembershipPlan extends BaseEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
     
-    @Column(name = "emoji")
-    private String emoji;
-    
-    @Column(name = "icon_type")
-    private String iconType;
-    
     @Column(name = "monthly_price", precision = 10, scale = 2, nullable = false)
     private BigDecimal monthlyPrice;
     

@@ -5,9 +5,10 @@ import org.fr.farmranding.entity.pricequote.PriceQuoteRequest;
 import org.fr.farmranding.entity.pricequote.PriceQuoteStatus;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Schema(description = "가격 제안 요청 응답 DTO")
+@Schema(description = "가격 견적 응답 DTO")
 public record PriceQuoteResponse(
         
         @Schema(description = "요청 ID", example = "1")
@@ -22,65 +23,32 @@ public record PriceQuoteResponse(
         @Schema(description = "품종명", example = "방울토마토")
         String variety,
         
-        @Schema(description = "재배방법", example = "유기농 재배")
-        String cultivationMethod,
+        @Schema(description = "등급", example = "특급")
+        String grade,
         
-        @Schema(description = "생산지역", example = "경기도 화성시")
-        String productionArea,
+        @Schema(description = "수확 예정일", example = "2024-02-15")
+        LocalDate harvestDate,
         
-        @Schema(description = "수확시기", example = "6월~8월")
-        String harvestSeason,
+        @Schema(description = "예상 가격 (원)", example = "15000")
+        BigDecimal estimatedPrice,
         
-        @Schema(description = "품질등급", example = "특급")
-        String qualityGrade,
+        @Schema(description = "최종 가격 (원)", example = "18000")
+        BigDecimal finalPrice,
         
-        @Schema(description = "유기농 인증 여부", example = "true")
-        Boolean organicCertification,
-        
-        @Schema(description = "GAP 인증 여부", example = "true")
-        Boolean gapCertification,
-        
-        @Schema(description = "기타 인증", example = "HACCP, ISO22000")
-        String otherCertifications,
-        
-        @Schema(description = "생산량", example = "1000.5")
-        BigDecimal productionVolume,
-        
-        @Schema(description = "생산단위", example = "kg")
-        String productionUnit,
-        
-        @Schema(description = "포장형태", example = "플라스틱 박스")
-        String packagingType,
-        
-        @Schema(description = "포장크기", example = "5kg 단위")
-        String packagingSize,
-        
-        @Schema(description = "목표시장", example = "대형마트, 온라인몰")
-        String targetMarket,
-        
-        @Schema(description = "유통채널", example = "직판, 도매시장")
-        String distributionChannel,
-        
-        @Schema(description = "현재 판매가격", example = "15000")
-        BigDecimal currentSellingPrice,
-        
-        @Schema(description = "희망가격대", example = "18000~22000원")
-        String desiredPriceRange,
-        
-        @Schema(description = "시장 분석 결과 (JSON)")
-        String marketAnalysis,
-        
-        @Schema(description = "가격 제안 결과 (JSON)")
-        String priceSuggestion,
-        
-        @Schema(description = "경쟁사 분석 결과 (JSON)")
-        String competitiveAnalysis,
+        @Schema(description = "분석 결과", example = "시장 상황을 고려할 때 kg당 18,000원이 적정 가격으로 분석됩니다.")
+        String analysisResult,
         
         @Schema(description = "요청 상태", example = "COMPLETED")
         PriceQuoteStatus status,
         
-        @Schema(description = "비고", example = "특별한 요구사항이나 추가 정보")
-        String notes,
+        @Schema(description = "완료 여부", example = "true")
+        Boolean isCompleted,
+        
+        @Schema(description = "예상 가격 보유 여부", example = "true")
+        Boolean hasEstimatedPrice,
+        
+        @Schema(description = "최종 가격 보유 여부", example = "true")
+        Boolean hasFinalPrice,
         
         @Schema(description = "생성일시", example = "2024-01-15T10:30:00")
         LocalDateTime createdAt,
@@ -94,26 +62,15 @@ public record PriceQuoteResponse(
                 request.getUser().getId(),
                 request.getCropName(),
                 request.getVariety(),
-                request.getCultivationMethod(),
-                request.getProductionArea(),
-                request.getHarvestSeason(),
-                request.getQualityGrade(),
-                request.getOrganicCertification(),
-                request.getGapCertification(),
-                request.getOtherCertifications(),
-                request.getProductionVolume(),
-                request.getProductionUnit(),
-                request.getPackagingType(),
-                request.getPackagingSize(),
-                request.getTargetMarket(),
-                request.getDistributionChannel(),
-                request.getCurrentSellingPrice(),
-                request.getDesiredPriceRange(),
-                request.getMarketAnalysis(),
-                request.getPriceSuggestion(),
-                request.getCompetitiveAnalysis(),
+                request.getGrade(),
+                request.getHarvestDate(),
+                request.getEstimatedPrice(),
+                request.getFinalPrice(),
+                request.getAnalysisResult(),
                 request.getStatus(),
-                request.getNotes(),
+                request.isCompleted(),
+                request.hasEstimatedPrice(),
+                request.hasFinalPrice(),
                 request.getCreatedAt(),
                 request.getUpdatedAt()
         );

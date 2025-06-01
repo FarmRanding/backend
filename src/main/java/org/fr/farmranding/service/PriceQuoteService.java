@@ -5,53 +5,66 @@ import org.fr.farmranding.dto.pricequote.PriceQuoteResponse;
 import org.fr.farmranding.dto.pricequote.PriceQuoteUpdateRequest;
 import org.fr.farmranding.entity.pricequote.PriceQuoteStatus;
 import org.fr.farmranding.entity.user.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface PriceQuoteService {
     
     /**
-     * 가격 제안 요청 생성
+     * 가격 견적 요청 생성
      */
-    PriceQuoteResponse createPriceQuoteRequest(PriceQuoteCreateRequest request, User currentUser);
+    PriceQuoteResponse createPriceQuote(PriceQuoteCreateRequest request, User currentUser);
     
     /**
-     * 가격 제안 요청 조회
+     * 내 가격 견적 요청 목록 조회
      */
-    PriceQuoteResponse getPriceQuoteRequest(Long requestId, User currentUser);
+    List<PriceQuoteResponse> getMyPriceQuotes(User currentUser);
     
     /**
-     * 사용자의 모든 가격 제안 요청 조회
+     * 내 가격 견적 요청 목록 조회 (페이징)
      */
-    List<PriceQuoteResponse> getUserPriceQuoteRequests(User currentUser);
+    Page<PriceQuoteResponse> getMyPriceQuotes(User currentUser, Pageable pageable);
     
     /**
-     * 상태별 가격 제안 요청 조회
+     * 상태별 가격 견적 요청 목록 조회
      */
-    List<PriceQuoteResponse> getPriceQuoteRequestsByStatus(PriceQuoteStatus status, User currentUser);
+    List<PriceQuoteResponse> getMyPriceQuotesByStatus(User currentUser, PriceQuoteStatus status);
     
     /**
-     * 가격 제안 요청 수정
+     * 가격 견적 요청 상세 조회
      */
-    PriceQuoteResponse updatePriceQuoteRequest(Long requestId, PriceQuoteUpdateRequest request, User currentUser);
+    PriceQuoteResponse getPriceQuote(Long priceQuoteId, User currentUser);
     
     /**
-     * 가격 제안 요청 삭제
+     * 가격 견적 요청 수정
      */
-    void deletePriceQuoteRequest(Long requestId, User currentUser);
+    PriceQuoteResponse updatePriceQuote(Long priceQuoteId, PriceQuoteUpdateRequest request, User currentUser);
     
     /**
-     * AI 가격 분석 실행 (실제 AI 로직은 나중에 구현)
+     * 가격 견적 요청 삭제
      */
-    PriceQuoteResponse analyzePriceQuote(Long requestId, User currentUser);
+    void deletePriceQuote(Long priceQuoteId, User currentUser);
     
     /**
-     * 요청 상태 변경
+     * 가격 분석 시작
      */
-    PriceQuoteResponse updateRequestStatus(Long requestId, PriceQuoteStatus status, User currentUser);
+    PriceQuoteResponse startAnalysis(Long priceQuoteId, User currentUser);
     
     /**
-     * 작물별 가격 제안 요청 조회
+     * 가격 분석 완료 (AI 분석 결과 저장)
      */
-    List<PriceQuoteResponse> getPriceQuoteRequestsByCrop(String cropName, User currentUser);
+    PriceQuoteResponse completeAnalysis(Long priceQuoteId, BigDecimal finalPrice, String analysisResult, User currentUser);
+    
+    /**
+     * 키워드로 가격 견적 요청 검색
+     */
+    List<PriceQuoteResponse> searchPriceQuotes(String keyword, User currentUser);
+    
+    /**
+     * 최근 가격 견적 요청 조회
+     */
+    List<PriceQuoteResponse> getRecentPriceQuotes(User currentUser, int limit);
 } 

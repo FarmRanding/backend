@@ -11,9 +11,13 @@ import org.fr.farmranding.entity.pricequote.PriceQuoteRequest;
 import org.fr.farmranding.entity.pricequote.PriceQuoteStatus;
 import org.fr.farmranding.entity.user.User;
 import org.fr.farmranding.repository.PriceQuoteRequestRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Slf4j
@@ -23,182 +27,147 @@ import java.util.List;
 public class PriceQuoteServiceImpl implements PriceQuoteService {
     
     private final PriceQuoteRequestRepository priceQuoteRequestRepository;
-    private final UserService userService;
     
     @Override
-    public PriceQuoteResponse createPriceQuoteRequest(PriceQuoteCreateRequest request, User currentUser) {
-        // 가격 제안 사용량 체크
-        userService.incrementPricingSuggestionUsage(currentUser.getId());
+    public PriceQuoteResponse createPriceQuote(PriceQuoteCreateRequest request, User currentUser) {
+        // 멤버십 사용량 제한 확인
+        if (!currentUser.canUsePricingSuggestion()) {
+            throw new BusinessException(FarmrandingResponseCode.PRICING_USAGE_LIMIT_EXCEEDED);
+        }
         
-        PriceQuoteRequest priceQuoteRequest = PriceQuoteRequest.builder()
+        PriceQuoteRequest priceQuote = PriceQuoteRequest.builder()
                 .user(currentUser)
                 .cropName(request.cropName())
                 .variety(request.variety())
-                .cultivationMethod(request.cultivationMethod())
-                .productionArea(request.productionArea())
-                .harvestSeason(request.harvestSeason())
-                .qualityGrade(request.qualityGrade())
-                .organicCertification(request.organicCertification())
-                .gapCertification(request.gapCertification())
-                .otherCertifications(request.otherCertifications())
-                .productionVolume(request.productionVolume())
-                .productionUnit(request.productionUnit())
-                .packagingType(request.packagingType())
-                .packagingSize(request.packagingSize())
-                .targetMarket(request.targetMarket())
-                .distributionChannel(request.distributionChannel())
-                .currentSellingPrice(request.currentSellingPrice())
-                .desiredPriceRange(request.desiredPriceRange())
-                .notes(request.notes())
+                .grade(request.grade())
+                .harvestDate(request.harvestDate())
+                .estimatedPrice(request.estimatedPrice())
                 .status(PriceQuoteStatus.DRAFT)
                 .build();
         
-        PriceQuoteRequest savedRequest = priceQuoteRequestRepository.save(priceQuoteRequest);
-        log.info("가격 제안 요청 생성 완료: requestId={}, userId={}", savedRequest.getId(), currentUser.getId());
+        PriceQuoteRequest savedPriceQuote = priceQuoteRequestRepository.save(priceQuote);
         
-        return PriceQuoteResponse.from(savedRequest);
+        // 사용량 증가
+        currentUser.incrementPricingSuggestionUsage();
+        
+        log.info("가격 견적 요청 생성 완료 - 사용자: {}, ID: {}", currentUser.getId(), savedPriceQuote.getId());
+        
+        return PriceQuoteResponse.from(savedPriceQuote);
     }
     
     @Override
     @Transactional(readOnly = true)
-    public PriceQuoteResponse getPriceQuoteRequest(Long requestId, User currentUser) {
-        PriceQuoteRequest request = findRequestByIdAndUser(requestId, currentUser.getId());
-        return PriceQuoteResponse.from(request);
-    }
-    
-    @Override
-    @Transactional(readOnly = true)
-    public List<PriceQuoteResponse> getUserPriceQuoteRequests(User currentUser) {
-        List<PriceQuoteRequest> requests = priceQuoteRequestRepository.findByUserId(currentUser.getId());
-        return requests.stream()
+    public List<PriceQuoteResponse> getMyPriceQuotes(User currentUser) {
+        List<PriceQuoteRequest> priceQuotes = priceQuoteRequestRepository.findByUserId(currentUser.getId());
+        return priceQuotes.stream()
                 .map(PriceQuoteResponse::from)
                 .toList();
     }
     
     @Override
     @Transactional(readOnly = true)
-    public List<PriceQuoteResponse> getPriceQuoteRequestsByStatus(PriceQuoteStatus status, User currentUser) {
-        List<PriceQuoteRequest> requests = priceQuoteRequestRepository.findByUserIdAndStatus(currentUser.getId(), status);
-        return requests.stream()
-                .map(PriceQuoteResponse::from)
-                .toList();
-    }
-    
-    @Override
-    public PriceQuoteResponse updatePriceQuoteRequest(Long requestId, PriceQuoteUpdateRequest request, User currentUser) {
-        PriceQuoteRequest priceQuoteRequest = findRequestByIdAndUser(requestId, currentUser.getId());
-        
-        if (!priceQuoteRequest.canEdit()) {
-            throw new BusinessException(FarmrandingResponseCode.INVALID_INPUT);
-        }
-        
-        // 기본 정보 업데이트
-        if (request.cropName() != null || request.variety() != null || request.cultivationMethod() != null ||
-            request.productionArea() != null || request.harvestSeason() != null) {
-            priceQuoteRequest.updateBasicInfo(
-                    request.cropName() != null ? request.cropName() : priceQuoteRequest.getCropName(),
-                    request.variety(),
-                    request.cultivationMethod(),
-                    request.productionArea(),
-                    request.harvestSeason()
-            );
-        }
-        
-        // 품질 정보 업데이트
-        if (request.qualityGrade() != null || request.organicCertification() != null ||
-            request.gapCertification() != null || request.otherCertifications() != null) {
-            priceQuoteRequest.updateQualityInfo(
-                    request.qualityGrade(),
-                    request.organicCertification(),
-                    request.gapCertification(),
-                    request.otherCertifications()
-            );
-        }
-        
-        // 생산 정보 업데이트
-        if (request.productionVolume() != null || request.productionUnit() != null ||
-            request.packagingType() != null || request.packagingSize() != null) {
-            priceQuoteRequest.updateProductionInfo(
-                    request.productionVolume(),
-                    request.productionUnit(),
-                    request.packagingType(),
-                    request.packagingSize()
-            );
-        }
-        
-        // 시장 정보 업데이트
-        if (request.targetMarket() != null || request.distributionChannel() != null ||
-            request.currentSellingPrice() != null || request.desiredPriceRange() != null) {
-            priceQuoteRequest.updateMarketInfo(
-                    request.targetMarket(),
-                    request.distributionChannel(),
-                    request.currentSellingPrice(),
-                    request.desiredPriceRange()
-            );
-        }
-        
-        // 비고 업데이트
-        if (request.notes() != null) {
-            priceQuoteRequest.updateNotes(request.notes());
-        }
-        
-        PriceQuoteRequest savedRequest = priceQuoteRequestRepository.save(priceQuoteRequest);
-        log.info("가격 제안 요청 수정 완료: requestId={}", requestId);
-        
-        return PriceQuoteResponse.from(savedRequest);
-    }
-    
-    @Override
-    public void deletePriceQuoteRequest(Long requestId, User currentUser) {
-        PriceQuoteRequest request = findRequestByIdAndUser(requestId, currentUser.getId());
-        
-        priceQuoteRequestRepository.delete(request);
-        log.info("가격 제안 요청 삭제 완료: requestId={}", requestId);
-    }
-    
-    @Override
-    public PriceQuoteResponse analyzePriceQuote(Long requestId, User currentUser) {
-        PriceQuoteRequest request = findRequestByIdAndUser(requestId, currentUser.getId());
-        
-        if (!request.canAnalyze()) {
-            throw new BusinessException(FarmrandingResponseCode.INVALID_INPUT);
-        }
-        
-        // TODO: 실제 AI 가격 분석 로직 구현 (외부 API 연동)
-        // 현재는 더미 데이터로 분석 완료 처리
-        String marketAnalysis = "{\"analysis\": \"AI가 분석한 시장 동향\", \"trend\": \"상승\"}";
-        String priceSuggestion = "{\"suggested_price\": 18000, \"min_price\": 16000, \"max_price\": 20000}";
-        String competitiveAnalysis = "{\"competitors\": [\"경쟁사A\", \"경쟁사B\"], \"position\": \"중간\"}";
-        
-        request.completeAnalysis(marketAnalysis, priceSuggestion, competitiveAnalysis);
-        PriceQuoteRequest savedRequest = priceQuoteRequestRepository.save(request);
-        
-        log.info("가격 분석 완료: requestId={}", requestId);
-        return PriceQuoteResponse.from(savedRequest);
-    }
-    
-    @Override
-    public PriceQuoteResponse updateRequestStatus(Long requestId, PriceQuoteStatus status, User currentUser) {
-        PriceQuoteRequest request = findRequestByIdAndUser(requestId, currentUser.getId());
-        
-        request.updateStatus(status);
-        PriceQuoteRequest savedRequest = priceQuoteRequestRepository.save(request);
-        
-        log.info("요청 상태 변경 완료: requestId={}, status={}", requestId, status);
-        return PriceQuoteResponse.from(savedRequest);
+    public Page<PriceQuoteResponse> getMyPriceQuotes(User currentUser, Pageable pageable) {
+        Page<PriceQuoteRequest> priceQuotes = priceQuoteRequestRepository.findByUserId(currentUser.getId(), pageable);
+        return priceQuotes.map(PriceQuoteResponse::from);
     }
     
     @Override
     @Transactional(readOnly = true)
-    public List<PriceQuoteResponse> getPriceQuoteRequestsByCrop(String cropName, User currentUser) {
-        List<PriceQuoteRequest> requests = priceQuoteRequestRepository.findByUserIdAndCropNameContaining(currentUser.getId(), cropName);
-        return requests.stream()
+    public List<PriceQuoteResponse> getMyPriceQuotesByStatus(User currentUser, PriceQuoteStatus status) {
+        List<PriceQuoteRequest> priceQuotes = priceQuoteRequestRepository.findByUserIdAndStatus(currentUser.getId(), status);
+        return priceQuotes.stream()
                 .map(PriceQuoteResponse::from)
                 .toList();
     }
     
-    private PriceQuoteRequest findRequestByIdAndUser(Long requestId, Long userId) {
-        return priceQuoteRequestRepository.findByIdAndUserId(requestId, userId)
-                .orElseThrow(() -> new BusinessException(FarmrandingResponseCode.USER_NOT_FOUND));
+    @Override
+    @Transactional(readOnly = true)
+    public PriceQuoteResponse getPriceQuote(Long priceQuoteId, User currentUser) {
+        PriceQuoteRequest priceQuote = findPriceQuoteByIdAndUser(priceQuoteId, currentUser);
+        return PriceQuoteResponse.from(priceQuote);
+    }
+    
+    @Override
+    public PriceQuoteResponse updatePriceQuote(Long priceQuoteId, PriceQuoteUpdateRequest request, User currentUser) {
+        PriceQuoteRequest priceQuote = findPriceQuoteByIdAndUser(priceQuoteId, currentUser);
+        
+        // 수정 가능한 상태인지 확인
+        if (!priceQuote.canEdit()) {
+            throw new BusinessException(FarmrandingResponseCode.PRICE_QUOTE_CANNOT_EDIT);
+        }
+        
+        priceQuote.updateBasicInfo(
+                request.cropName() != null ? request.cropName() : priceQuote.getCropName(),
+                request.variety() != null ? request.variety() : priceQuote.getVariety(),
+                request.grade() != null ? request.grade() : priceQuote.getGrade(),
+                request.harvestDate() != null ? request.harvestDate() : priceQuote.getHarvestDate(),
+                request.estimatedPrice() != null ? request.estimatedPrice() : priceQuote.getEstimatedPrice()
+        );
+        
+        log.info("가격 견적 요청 수정 완료 - 사용자: {}, ID: {}", currentUser.getId(), priceQuoteId);
+        
+        return PriceQuoteResponse.from(priceQuote);
+    }
+    
+    @Override
+    public void deletePriceQuote(Long priceQuoteId, User currentUser) {
+        PriceQuoteRequest priceQuote = findPriceQuoteByIdAndUser(priceQuoteId, currentUser);
+        
+        priceQuoteRequestRepository.delete(priceQuote);
+        
+        log.info("가격 견적 요청 삭제 완료 - 사용자: {}, ID: {}", currentUser.getId(), priceQuoteId);
+    }
+    
+    @Override
+    public PriceQuoteResponse startAnalysis(Long priceQuoteId, User currentUser) {
+        PriceQuoteRequest priceQuote = findPriceQuoteByIdAndUser(priceQuoteId, currentUser);
+        
+        if (!priceQuote.canEdit()) {
+            throw new BusinessException(FarmrandingResponseCode.PRICE_QUOTE_CANNOT_ANALYZE);
+        }
+        
+        priceQuote.updateStatus(PriceQuoteStatus.IN_PROGRESS);
+        
+        // TODO: 실제 AI 분석 로직 호출
+        
+        log.info("가격 분석 시작 - 사용자: {}, ID: {}", currentUser.getId(), priceQuoteId);
+        
+        return PriceQuoteResponse.from(priceQuote);
+    }
+    
+    @Override
+    public PriceQuoteResponse completeAnalysis(Long priceQuoteId, BigDecimal finalPrice, String analysisResult, User currentUser) {
+        PriceQuoteRequest priceQuote = findPriceQuoteByIdAndUser(priceQuoteId, currentUser);
+        
+        priceQuote.completeAnalysis(finalPrice, analysisResult);
+        
+        log.info("가격 분석 완료 - 사용자: {}, ID: {}, 최종가격: {}", currentUser.getId(), priceQuoteId, finalPrice);
+        
+        return PriceQuoteResponse.from(priceQuote);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<PriceQuoteResponse> searchPriceQuotes(String keyword, User currentUser) {
+        List<PriceQuoteRequest> priceQuotes = priceQuoteRequestRepository.findByUserIdAndCropNameContaining(currentUser.getId(), keyword);
+        return priceQuotes.stream()
+                .map(PriceQuoteResponse::from)
+                .toList();
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<PriceQuoteResponse> getRecentPriceQuotes(User currentUser, int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        List<PriceQuoteRequest> priceQuotes = priceQuoteRequestRepository.findRecentByUserId(currentUser.getId(), pageable);
+        return priceQuotes.stream()
+                .map(PriceQuoteResponse::from)
+                .toList();
+    }
+    
+    // 내부 메서드
+    private PriceQuoteRequest findPriceQuoteByIdAndUser(Long priceQuoteId, User currentUser) {
+        return priceQuoteRequestRepository.findByIdAndUserId(priceQuoteId, currentUser.getId())
+                .orElseThrow(() -> new BusinessException(FarmrandingResponseCode.PRICE_QUOTE_NOT_FOUND));
     }
 } 

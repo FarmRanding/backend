@@ -25,8 +25,9 @@ public interface PriceQuoteRequestRepository extends JpaRepository<PriceQuoteReq
     
     Page<PriceQuoteRequest> findByUserIdAndStatus(Long userId, PriceQuoteStatus status, Pageable pageable);
     
-    @Query("SELECT pqr FROM PriceQuoteRequest pqr WHERE pqr.user.id = :userId AND pqr.cropName LIKE %:cropName%")
-    List<PriceQuoteRequest> findByUserIdAndCropNameContaining(@Param("userId") Long userId, @Param("cropName") String cropName);
+    @Query("SELECT p FROM PriceQuoteRequest p WHERE p.user.id = :userId AND p.cropName LIKE %:keyword%")
+    List<PriceQuoteRequest> findByUserIdAndCropNameContaining(@Param("userId") Long userId, 
+                                                             @Param("keyword") String keyword);
     
     @Query("SELECT pqr FROM PriceQuoteRequest pqr WHERE pqr.user.id = :userId AND pqr.productionArea LIKE %:area%")
     List<PriceQuoteRequest> findByUserIdAndProductionAreaContaining(@Param("userId") Long userId, @Param("area") String area);
@@ -51,11 +52,11 @@ public interface PriceQuoteRequestRepository extends JpaRepository<PriceQuoteReq
     
     long countByUserIdAndStatus(Long userId, PriceQuoteStatus status);
     
-    boolean existsByUserIdAndCropNameAndVariety(Long userId, String cropName, String variety);
+    boolean existsByUserIdAndCropName(Long userId, String cropName);
     
     Optional<PriceQuoteRequest> findByIdAndUserId(Long id, Long userId);
     
-    @Query("SELECT pqr FROM PriceQuoteRequest pqr WHERE pqr.user.id = :userId ORDER BY pqr.updatedAt DESC")
+    @Query("SELECT p FROM PriceQuoteRequest p WHERE p.user.id = :userId ORDER BY p.updatedAt DESC")
     List<PriceQuoteRequest> findRecentByUserId(@Param("userId") Long userId, Pageable pageable);
     
     @Query("SELECT pqr FROM PriceQuoteRequest pqr WHERE pqr.status = :status AND pqr.updatedAt < :cutoffDate")
