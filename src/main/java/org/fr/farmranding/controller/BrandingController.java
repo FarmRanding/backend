@@ -129,7 +129,7 @@ public class BrandingController {
     public ResponseEntity<FarmrandingResponseBody<BrandingProjectResponse>> updateBrandingKeywords(
             @CurrentUser User currentUser,
             @PathVariable Long projectId,
-            @RequestBody String keywords) {
+            @RequestBody List<String> keywords) {
         
         BrandingProjectResponse response = brandingService.updateBrandingKeywords(projectId, keywords, currentUser);
         return ResponseEntity.ok(FarmrandingResponseBody.success(response));
@@ -145,7 +145,7 @@ public class BrandingController {
     public ResponseEntity<FarmrandingResponseBody<BrandingProjectResponse>> updateCropAppealKeywords(
             @CurrentUser User currentUser,
             @PathVariable Long projectId,
-            @RequestBody String keywords) {
+            @RequestBody List<String> keywords) {
         
         BrandingProjectResponse response = brandingService.updateCropAppealKeywords(projectId, keywords, currentUser);
         return ResponseEntity.ok(FarmrandingResponseBody.success(response));
@@ -161,7 +161,7 @@ public class BrandingController {
     public ResponseEntity<FarmrandingResponseBody<BrandingProjectResponse>> updateLogoImageKeywords(
             @CurrentUser User currentUser,
             @PathVariable Long projectId,
-            @RequestBody String keywords) {
+            @RequestBody List<String> keywords) {
         
         BrandingProjectResponse response = brandingService.updateLogoImageKeywords(projectId, keywords, currentUser);
         return ResponseEntity.ok(FarmrandingResponseBody.success(response));

@@ -123,7 +123,7 @@ public class BrandingServiceImpl implements BrandingService {
     }
     
     @Override
-    public BrandingProjectResponse updateBrandingKeywords(Long projectId, String keywords, User currentUser) {
+    public BrandingProjectResponse updateBrandingKeywords(Long projectId, List<String> keywords, User currentUser) {
         BrandingProject project = findProjectByIdAndUser(projectId, currentUser.getId());
         
         if (!project.canEdit()) {
@@ -138,7 +138,7 @@ public class BrandingServiceImpl implements BrandingService {
     }
     
     @Override
-    public BrandingProjectResponse updateCropAppealKeywords(Long projectId, String keywords, User currentUser) {
+    public BrandingProjectResponse updateCropAppealKeywords(Long projectId, List<String> keywords, User currentUser) {
         BrandingProject project = findProjectByIdAndUser(projectId, currentUser.getId());
         
         if (!project.canEdit()) {
@@ -153,7 +153,7 @@ public class BrandingServiceImpl implements BrandingService {
     }
     
     @Override
-    public BrandingProjectResponse updateLogoImageKeywords(Long projectId, String keywords, User currentUser) {
+    public BrandingProjectResponse updateLogoImageKeywords(Long projectId, List<String> keywords, User currentUser) {
         BrandingProject project = findProjectByIdAndUser(projectId, currentUser.getId());
         
         if (!project.canEdit()) {
@@ -193,10 +193,12 @@ public class BrandingServiceImpl implements BrandingService {
         // TODO: 실제 AI 브랜딩 로직 구현 (외부 API 연동)
         // 현재는 더미 데이터로 완료 처리
         String generatedBrandName = project.getCropName() + " 프리미엄";
-        String brandStory = "{\"story\": \"AI가 생성한 브랜드 스토리\"}";
-        String brandConcept = "{\"concept\": \"AI가 생성한 브랜드 컨셉\"}";
+        String promotionText = "AI가 생성한 홍보 문구입니다.";
+        String brandStory = "AI가 생성한 브랜드 스토리입니다.";
+        String brandConcept = "AI가 생성한 브랜드 컨셉입니다.";
+        String brandImageUrl = "https://example.com/generated-brand-image.png";
         
-        project.completeBranding(generatedBrandName, brandStory, brandConcept);
+        project.completeBranding(generatedBrandName, promotionText, brandStory, brandConcept, brandImageUrl);
         BrandingProject savedProject = brandingProjectRepository.save(project);
         
         log.info("브랜딩 완료 처리: projectId={}", projectId);

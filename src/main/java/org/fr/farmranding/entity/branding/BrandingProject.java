@@ -7,8 +7,9 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.fr.farmranding.common.entity.BaseEntity;
 import org.fr.farmranding.entity.user.User;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+import org.fr.farmranding.common.converter.JsonConverter;
+
+import java.util.List;
 
 @Entity
 @Table(name = "branding_projects")
@@ -39,18 +40,18 @@ public class BrandingProject extends BaseEntity {
     @Column(name = "grade")
     private Grade grade;
     
-    // 키워드 정보 (JSON으로 저장)
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "branding_keywords", columnDefinition = "JSON")
-    private String brandingKeywords;
+    // 키워드 정보 (TEXT로 저장, JSON 변환)
+    @Convert(converter = JsonConverter.class)
+    @Column(name = "branding_keywords", columnDefinition = "TEXT")
+    private List<String> brandingKeywords;
     
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "crop_appeal_keywords", columnDefinition = "JSON")
-    private String cropAppealKeywords;
+    @Convert(converter = JsonConverter.class)
+    @Column(name = "crop_appeal_keywords", columnDefinition = "TEXT")
+    private List<String> cropAppealKeywords;
     
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "logo_image_keywords", columnDefinition = "JSON")
-    private String logoImageKeywords;
+    @Convert(converter = JsonConverter.class)
+    @Column(name = "logo_image_keywords", columnDefinition = "TEXT")
+    private List<String> logoImageKeywords;
     
     // GAP 인증 정보
     @Column(name = "gap_number")
@@ -102,17 +103,17 @@ public class BrandingProject extends BaseEntity {
         this.currentStep = BrandingStep.BRANDING_KEYWORDS;
     }
     
-    public void updateBrandingKeywords(String brandingKeywords) {
+    public void updateBrandingKeywords(List<String> brandingKeywords) {
         this.brandingKeywords = brandingKeywords;
         this.currentStep = BrandingStep.CROP_APPEAL_KEYWORDS;
     }
     
-    public void updateCropAppealKeywords(String cropAppealKeywords) {
+    public void updateCropAppealKeywords(List<String> cropAppealKeywords) {
         this.cropAppealKeywords = cropAppealKeywords;
         this.currentStep = BrandingStep.LOGO_IMAGE_KEYWORDS;
     }
     
-    public void updateLogoImageKeywords(String logoImageKeywords) {
+    public void updateLogoImageKeywords(List<String> logoImageKeywords) {
         this.logoImageKeywords = logoImageKeywords;
         this.currentStep = BrandingStep.BRAND_NAME_GENERATION;
     }

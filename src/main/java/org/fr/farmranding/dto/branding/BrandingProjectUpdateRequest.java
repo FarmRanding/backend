@@ -6,6 +6,8 @@ import org.fr.farmranding.entity.branding.BrandingStatus;
 import org.fr.farmranding.entity.branding.BrandingStep;
 import org.fr.farmranding.entity.branding.Grade;
 
+import java.util.List;
+
 @Schema(description = "브랜딩 프로젝트 수정 요청 DTO")
 public record BrandingProjectUpdateRequest(
         
@@ -28,14 +30,14 @@ public record BrandingProjectUpdateRequest(
         @Schema(description = "등급", example = "SPECIAL")
         Grade grade,
         
-        @Schema(description = "브랜딩 키워드 (JSON)", example = "[\"프리미엄\", \"신선한\", \"유기농\"]")
-        String brandingKeywords,
+        @Schema(description = "브랜딩 키워드", example = "[\"프리미엄\", \"신선한\", \"유기농\"]")
+        List<String> brandingKeywords,
         
-        @Schema(description = "작물 매력 키워드 (JSON)", example = "[\"달콤한\", \"과즙이 풍부한\", \"비타민 함유\"]")
-        String cropAppealKeywords,
+        @Schema(description = "작물 매력 키워드", example = "[\"달콤한\", \"과즙이 풍부한\", \"비타민 함유\"]")
+        List<String> cropAppealKeywords,
         
-        @Schema(description = "로고 이미지 키워드 (JSON)", example = "[\"심플한\", \"모던한\", \"밝은\"]")
-        String logoImageKeywords,
+        @Schema(description = "로고 이미지 키워드", example = "[\"심플한\", \"모던한\", \"밝은\"]")
+        List<String> logoImageKeywords,
         
         @Size(max = 50, message = "GAP 인증번호는 50자 이하여야 합니다.")
         @Schema(description = "GAP 인증번호", example = "GAP-2024-001")
@@ -44,7 +46,7 @@ public record BrandingProjectUpdateRequest(
         @Schema(description = "GAP 인증 여부", example = "true")
         Boolean isGapVerified,
         
-        @Size(max = 100, message = "브랜드명은 100자 이하여야 합니다.")
+        @Size(max = 100, message = "생성된 브랜드명은 100자 이하여야 합니다.")
         @Schema(description = "생성된 브랜드명", example = "김씨농장 프리미엄 토마토")
         String generatedBrandName,
         
@@ -52,11 +54,11 @@ public record BrandingProjectUpdateRequest(
         @Schema(description = "홍보 문구", example = "김씨농장 프리미엄 토마토와 함께하는 건강한 삶")
         String promotionText,
         
-        @Size(max = 2000, message = "브랜드 스토리는 2000자 이하여야 합니다.")
+        @Size(max = 1000, message = "브랜드 스토리는 1000자 이하여야 합니다.")
         @Schema(description = "브랜드 스토리", example = "3대째 이어온 전통 농법으로 정성스럽게 키운 프리미엄 토마토입니다.")
         String brandStory,
         
-        @Size(max = 1000, message = "브랜드 컨셉은 1000자 이하여야 합니다.")
+        @Size(max = 500, message = "브랜드 컨셉은 500자 이하여야 합니다.")
         @Schema(description = "브랜드 컨셉", example = "자연 그대로의 맛과 영양을 담은 프리미엄 농산물 브랜드")
         String brandConcept,
         

@@ -7,6 +7,7 @@ import org.fr.farmranding.entity.branding.BrandingStep;
 import org.fr.farmranding.entity.branding.Grade;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Schema(description = "브랜딩 프로젝트 응답 DTO")
 public record BrandingProjectResponse(
@@ -32,14 +33,14 @@ public record BrandingProjectResponse(
         @Schema(description = "등급", example = "SPECIAL")
         Grade grade,
         
-        @Schema(description = "브랜딩 키워드 (JSON)", example = "[\"프리미엄\", \"신선한\", \"유기농\"]")
-        String brandingKeywords,
+        @Schema(description = "브랜딩 키워드", example = "[\"프리미엄\", \"신선한\", \"유기농\"]")
+        List<String> brandingKeywords,
         
-        @Schema(description = "작물 매력 키워드 (JSON)", example = "[\"달콤한\", \"과즙이 풍부한\", \"비타민 함유\"]")
-        String cropAppealKeywords,
+        @Schema(description = "작물 매력 키워드", example = "[\"달콤한\", \"과즙이 풍부한\", \"비타민 함유\"]")
+        List<String> cropAppealKeywords,
         
-        @Schema(description = "로고 이미지 키워드 (JSON)", example = "[\"심플한\", \"모던한\", \"밝은\"]")
-        String logoImageKeywords,
+        @Schema(description = "로고 이미지 키워드", example = "[\"심플한\", \"모던한\", \"밝은\"]")
+        List<String> logoImageKeywords,
         
         @Schema(description = "GAP 인증번호", example = "GAP-2024-001")
         String gapNumber,

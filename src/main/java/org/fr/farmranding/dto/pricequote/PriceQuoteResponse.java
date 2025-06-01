@@ -2,6 +2,7 @@ package org.fr.farmranding.dto.pricequote;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.fr.farmranding.entity.pricequote.PriceQuoteRequest;
+import org.fr.farmranding.entity.pricequote.PriceQuoteStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -28,6 +29,18 @@ public record PriceQuoteResponse(
         @Schema(description = "수확 예정일", example = "2024-02-15")
         LocalDate harvestDate,
         
+        @Schema(description = "단위", example = "kg")
+        String unit,
+        
+        @Schema(description = "수량", example = "1")
+        Integer quantity,
+        
+        @Schema(description = "예상 가격 (원)", example = "15000")
+        BigDecimal estimatedPrice,
+        
+        @Schema(description = "상태", example = "DRAFT")
+        PriceQuoteStatus status,
+        
         @Schema(description = "최저가 (원)", example = "12000")
         BigDecimal minPrice,
         
@@ -40,14 +53,11 @@ public record PriceQuoteResponse(
         @Schema(description = "AI 추천가격 (원)", example = "18000")
         BigDecimal fairPrice,
         
+        @Schema(description = "최종 분석 가격 (원)", example = "18000")
+        BigDecimal finalPrice,
+        
         @Schema(description = "AI 분석 결과", example = "현재 시장 상황을 고려할 때 kg당 18,000원이 적정 가격으로 분석됩니다.")
         String analysisResult,
-        
-        @Schema(description = "단위", example = "kg")
-        String unit,
-        
-        @Schema(description = "수량", example = "1")
-        Integer quantity,
         
         @Schema(description = "분석 완료 여부", example = "true")
         Boolean hasAnalysisResult,
@@ -66,13 +76,16 @@ public record PriceQuoteResponse(
                 request.getVariety(),
                 request.getGrade(),
                 request.getHarvestDate(),
+                request.getUnit(),
+                request.getQuantity(),
+                request.getEstimatedPrice(),
+                request.getStatus(),
                 request.getMinPrice(),
                 request.getMaxPrice(),
                 request.getAvgPrice(),
                 request.getFairPrice(),
+                request.getFinalPrice(),
                 request.getAnalysisResult(),
-                request.getUnit(),
-                request.getQuantity(),
                 request.hasAnalysisResult(),
                 request.getCreatedAt(),
                 request.getUpdatedAt()

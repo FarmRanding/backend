@@ -31,8 +31,8 @@ public class UserServiceImpl implements UserService {
     public UserProfileResponse updateUserProfile(Long userId, UserProfileUpdateRequest request) {
         User user = findUserById(userId);
         
-        // 프로필 기본 정보 업데이트
-        user.updateProfile(request.nickname(), request.profileImage());
+        // 프로필 기본 정보 업데이트 (nickname, name, profileImage)
+        user.updateProfile(request.nickname(), request.name(), request.profileImage());
         
         // 농장 정보 업데이트
         user.updateFarmInfo(

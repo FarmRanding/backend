@@ -41,6 +41,8 @@ public class PriceQuoteServiceImpl implements PriceQuoteService {
                 .variety(request.variety())
                 .grade(request.grade())
                 .harvestDate(request.harvestDate())
+                .unit(request.unit())
+                .quantity(request.quantity())
                 .estimatedPrice(request.estimatedPrice())
                 .status(PriceQuoteStatus.DRAFT)
                 .build();

@@ -3,6 +3,7 @@ package org.fr.farmranding.dto.pricequote;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Schema(description = "가격 견적 생성 요청 DTO")
@@ -31,5 +32,9 @@ public record PriceQuoteCreateRequest(
         @NotNull(message = "수량은 필수입니다.")
         @Min(value = 1, message = "수량은 1 이상이어야 합니다.")
         @Schema(description = "수량", example = "1", required = true)
-        Integer quantity
+        Integer quantity,
+        
+        @DecimalMin(value = "0.0", inclusive = false, message = "예상 가격은 0보다 커야 합니다.")
+        @Schema(description = "예상 가격", example = "15000")
+        BigDecimal estimatedPrice
 ) {} 

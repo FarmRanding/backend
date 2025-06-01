@@ -45,6 +45,8 @@ public enum FarmrandingResponseCode {
     // PRICE QUOTE
     PRICE_QUOTE_NOT_FOUND(HttpStatus.NOT_FOUND, "FR411", "가격 견적 요청을 찾을 수 없습니다"),
     PRICE_QUOTE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "FR412", "가격 견적 요청에 대한 접근 권한이 없습니다"),
+    PRICE_QUOTE_CANNOT_EDIT(HttpStatus.CONFLICT, "FR413", "수정할 수 없는 가격 견적 요청입니다"),
+    PRICE_QUOTE_CANNOT_ANALYZE(HttpStatus.CONFLICT, "FR414", "분석할 수 없는 가격 견적 요청입니다"),
     
     // BRANDING PROJECT
     BRANDING_PROJECT_NOT_FOUND(HttpStatus.NOT_FOUND, "FR421", "브랜딩 프로젝트를 찾을 수 없습니다"),
