@@ -28,6 +28,12 @@ public class BrandingController {
     
     private final BrandingService brandingService;
     
+    @Operation(summary = "브랜딩 API 헬스체크", description = "브랜딩 API의 상태를 확인합니다.")
+    @GetMapping("/health")
+    public ResponseEntity<FarmrandingResponseBody<String>> healthCheck() {
+        return ResponseEntity.ok(FarmrandingResponseBody.success("브랜딩 API가 정상적으로 동작중입니다."));
+    }
+    
     @Operation(summary = "브랜딩 프로젝트 생성", description = "새로운 브랜딩 프로젝트를 생성합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "프로젝트 생성 성공"),
@@ -53,7 +59,7 @@ public class BrandingController {
     @GetMapping("/{projectId}")
     public ResponseEntity<FarmrandingResponseBody<BrandingProjectResponse>> getBrandingProject(
             @CurrentUser User currentUser,
-            @PathVariable Long projectId) {
+            @PathVariable("projectId") Long projectId) {
         
         BrandingProjectResponse response = brandingService.getBrandingProject(projectId, currentUser);
         return ResponseEntity.ok(FarmrandingResponseBody.success(response));
@@ -80,7 +86,7 @@ public class BrandingController {
     @GetMapping("/status/{status}")
     public ResponseEntity<FarmrandingResponseBody<List<BrandingProjectResponse>>> getBrandingProjectsByStatus(
             @CurrentUser User currentUser,
-            @PathVariable BrandingStatus status) {
+            @PathVariable("status") BrandingStatus status) {
         
         List<BrandingProjectResponse> response = brandingService.getBrandingProjectsByStatus(status, currentUser);
         return ResponseEntity.ok(FarmrandingResponseBody.success(response));
@@ -96,7 +102,7 @@ public class BrandingController {
     @PutMapping("/{projectId}")
     public ResponseEntity<FarmrandingResponseBody<BrandingProjectResponse>> updateBrandingProject(
             @CurrentUser User currentUser,
-            @PathVariable Long projectId,
+            @PathVariable("projectId") Long projectId,
             @Valid @RequestBody BrandingProjectUpdateRequest request) {
         
         BrandingProjectResponse response = brandingService.updateBrandingProject(projectId, request, currentUser);
@@ -112,7 +118,7 @@ public class BrandingController {
     @DeleteMapping("/{projectId}")
     public ResponseEntity<FarmrandingResponseBody<Void>> deleteBrandingProject(
             @CurrentUser User currentUser,
-            @PathVariable Long projectId) {
+            @PathVariable("projectId") Long projectId) {
         
         brandingService.deleteBrandingProject(projectId, currentUser);
         return ResponseEntity.status(HttpStatus.NO_CONTENT)
@@ -128,7 +134,7 @@ public class BrandingController {
     @PutMapping("/{projectId}/branding-keywords")
     public ResponseEntity<FarmrandingResponseBody<BrandingProjectResponse>> updateBrandingKeywords(
             @CurrentUser User currentUser,
-            @PathVariable Long projectId,
+            @PathVariable("projectId") Long projectId,
             @RequestBody List<String> keywords) {
         
         BrandingProjectResponse response = brandingService.updateBrandingKeywords(projectId, keywords, currentUser);
@@ -144,7 +150,7 @@ public class BrandingController {
     @PutMapping("/{projectId}/crop-appeal-keywords")
     public ResponseEntity<FarmrandingResponseBody<BrandingProjectResponse>> updateCropAppealKeywords(
             @CurrentUser User currentUser,
-            @PathVariable Long projectId,
+            @PathVariable("projectId") Long projectId,
             @RequestBody List<String> keywords) {
         
         BrandingProjectResponse response = brandingService.updateCropAppealKeywords(projectId, keywords, currentUser);
@@ -160,7 +166,7 @@ public class BrandingController {
     @PutMapping("/{projectId}/logo-image-keywords")
     public ResponseEntity<FarmrandingResponseBody<BrandingProjectResponse>> updateLogoImageKeywords(
             @CurrentUser User currentUser,
-            @PathVariable Long projectId,
+            @PathVariable("projectId") Long projectId,
             @RequestBody List<String> keywords) {
         
         BrandingProjectResponse response = brandingService.updateLogoImageKeywords(projectId, keywords, currentUser);
@@ -176,7 +182,7 @@ public class BrandingController {
     @PostMapping("/{projectId}/complete")
     public ResponseEntity<FarmrandingResponseBody<BrandingProjectResponse>> completeBranding(
             @CurrentUser User currentUser,
-            @PathVariable Long projectId) {
+            @PathVariable("projectId") Long projectId) {
         
         BrandingProjectResponse response = brandingService.completeBranding(projectId, currentUser);
         return ResponseEntity.ok(FarmrandingResponseBody.success(response));

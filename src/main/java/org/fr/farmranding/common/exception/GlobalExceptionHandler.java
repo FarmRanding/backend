@@ -4,6 +4,8 @@ import org.fr.farmranding.common.code.FarmrandingResponseCode;
 import org.fr.farmranding.common.dto.FarmrandingResponseBody;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -20,6 +22,28 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<FarmrandingResponseBody<Void>> handleBusinessException(BusinessException e) {
         FarmrandingResponseCode errorCode = e.getErrorCode();
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(FarmrandingResponseBody.error(errorCode.getCode(), errorCode.getMessage()));
+    }
+
+    /**
+     * Spring Security 인증 예외 처리 (401)
+     */
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<FarmrandingResponseBody<Void>> handleAuthenticationException(AuthenticationException e) {
+        FarmrandingResponseCode errorCode = FarmrandingResponseCode.AUTHENTICATION_FAILED;
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(FarmrandingResponseBody.error(errorCode.getCode(), errorCode.getMessage()));
+    }
+
+    /**
+     * Spring Security 권한 예외 처리 (403)
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<FarmrandingResponseBody<Void>> handleAccessDeniedException(AccessDeniedException e) {
+        FarmrandingResponseCode errorCode = FarmrandingResponseCode.ACCESS_DENIED;
         return ResponseEntity
                 .status(errorCode.getHttpStatus())
                 .body(FarmrandingResponseBody.error(errorCode.getCode(), errorCode.getMessage()));
