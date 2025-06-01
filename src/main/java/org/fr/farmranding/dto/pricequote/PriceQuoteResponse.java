@@ -2,7 +2,6 @@ package org.fr.farmranding.dto.pricequote;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.fr.farmranding.entity.pricequote.PriceQuoteRequest;
-import org.fr.farmranding.entity.pricequote.PriceQuoteStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -38,9 +37,6 @@ public record PriceQuoteResponse(
         @Schema(description = "분석 결과", example = "시장 상황을 고려할 때 kg당 18,000원이 적정 가격으로 분석됩니다.")
         String analysisResult,
         
-        @Schema(description = "요청 상태", example = "COMPLETED")
-        PriceQuoteStatus status,
-        
         @Schema(description = "완료 여부", example = "true")
         Boolean isCompleted,
         
@@ -49,6 +45,9 @@ public record PriceQuoteResponse(
         
         @Schema(description = "최종 가격 보유 여부", example = "true")
         Boolean hasFinalPrice,
+        
+        @Schema(description = "분석 결과 보유 여부", example = "true")
+        Boolean hasAnalysisResult,
         
         @Schema(description = "생성일시", example = "2024-01-15T10:30:00")
         LocalDateTime createdAt,
@@ -67,10 +66,10 @@ public record PriceQuoteResponse(
                 request.getEstimatedPrice(),
                 request.getFinalPrice(),
                 request.getAnalysisResult(),
-                request.getStatus(),
                 request.isCompleted(),
                 request.hasEstimatedPrice(),
                 request.hasFinalPrice(),
+                request.hasAnalysisResult(),
                 request.getCreatedAt(),
                 request.getUpdatedAt()
         );

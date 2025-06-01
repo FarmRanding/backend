@@ -23,7 +23,7 @@ public class PriceQuoteRequest extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
     
-    // 기본 작물 정보 (프론트엔드 요구사항에 맞춤)
+    // 작물 정보
     @Column(name = "crop_name", nullable = false)
     private String cropName;
     
@@ -36,56 +36,38 @@ public class PriceQuoteRequest extends BaseEntity {
     @Column(name = "harvest_date")
     private LocalDate harvestDate;
     
-    // 가격 정보
-    @Column(name = "estimated_price", precision = 10, scale = 2)
-    private BigDecimal estimatedPrice;
+    // 가격 정보 (프론트엔드 요구사항에 맞춤)
+    @Column(name = "min_price", precision = 10, scale = 2)
+    private BigDecimal minPrice;
     
-    @Column(name = "final_price", precision = 10, scale = 2)
-    private BigDecimal finalPrice;
+    @Column(name = "max_price", precision = 10, scale = 2)
+    private BigDecimal maxPrice;
     
-    // 분석 결과
-    @Column(name = "analysis_result", columnDefinition = "TEXT")
-    private String analysisResult;
+    @Column(name = "avg_price", precision = 10, scale = 2)
+    private BigDecimal avgPrice;
     
-    // 상태 관리
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private PriceQuoteStatus status;
+    @Column(name = "fair_price", precision = 10, scale = 2)
+    private BigDecimal fairPrice;
+    
+    // 추가 정보
+    @Column(name = "unit", nullable = false)
+    private String unit;
+    
+    @Column(name = "quantity", nullable = false)
+    private Integer quantity;
     
     // 비즈니스 메서드
-    public void updateBasicInfo(String cropName, String variety, String grade, 
-                               LocalDate harvestDate, BigDecimal estimatedPrice) {
+    public void updateBasicInfo(String cropName, String variety, String grade, LocalDate harvestDate) {
         this.cropName = cropName;
         this.variety = variety;
         this.grade = grade;
         this.harvestDate = harvestDate;
-        this.estimatedPrice = estimatedPrice;
-        this.status = PriceQuoteStatus.PENDING;
     }
     
-    public void completeAnalysis(BigDecimal finalPrice, String analysisResult) {
-        this.finalPrice = finalPrice;
-        this.analysisResult = analysisResult;
-        this.status = PriceQuoteStatus.COMPLETED;
-    }
-    
-    public void updateStatus(PriceQuoteStatus status) {
-        this.status = status;
-    }
-    
-    public boolean isCompleted() {
-        return this.status == PriceQuoteStatus.COMPLETED;
-    }
-    
-    public boolean canEdit() {
-        return this.status.canEdit();
-    }
-    
-    public boolean hasEstimatedPrice() {
-        return this.estimatedPrice != null && this.estimatedPrice.compareTo(BigDecimal.ZERO) > 0;
-    }
-    
-    public boolean hasFinalPrice() {
-        return this.finalPrice != null && this.finalPrice.compareTo(BigDecimal.ZERO) > 0;
+    public void updatePriceInfo(BigDecimal minPrice, BigDecimal maxPrice, BigDecimal avgPrice, BigDecimal fairPrice) {
+        this.minPrice = minPrice;
+        this.maxPrice = maxPrice;
+        this.avgPrice = avgPrice;
+        this.fairPrice = fairPrice;
     }
 } 
