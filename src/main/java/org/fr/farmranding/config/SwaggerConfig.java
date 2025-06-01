@@ -14,7 +14,7 @@ import org.springframework.http.HttpHeaders;
 
 @OpenAPIDefinition(
         servers = {
-                @Server(url = "http://localhost:8080", description = "팜랜딩 local 서버입니다.")
+                @Server(url = "http://localhost:8081", description = "팜랜딩 local 서버입니다.")
         }
 )
 @Configuration
