@@ -1,10 +1,18 @@
 package org.fr.farmranding.service;
 
+import org.fr.farmranding.dto.request.UserSignupRequest;
+import org.fr.farmranding.dto.response.UserResponse;
 import org.fr.farmranding.dto.user.UserProfileResponse;
 import org.fr.farmranding.dto.user.UserProfileUpdateRequest;
 import org.fr.farmranding.dto.user.UserUsageResponse;
+import org.fr.farmranding.entity.user.User;
 
 public interface UserService {
+    
+    /**
+     * 신규 유저 정보 저장 (OAuth2 로그인 후)
+     */
+    UserResponse completeSignup(User currentUser, UserSignupRequest request);
     
     /**
      * 사용자 프로필 조회

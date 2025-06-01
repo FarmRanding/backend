@@ -22,19 +22,9 @@ public class User extends BaseEntity {
     @Column(name = "email", unique = true, nullable = false)
     private String email;
     
-    @Column(name = "nickname", nullable = false)
-    private String nickname;
-    
     @Column(name = "name")
     private String name;
-    
-    @Column(name = "profile_image")
-    private String profileImage;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(name = "provider", nullable = false)
-    private SocialProvider provider;
-    
+
     @Column(name = "provider_id", nullable = false)
     private String providerId;
     
@@ -57,29 +47,12 @@ public class User extends BaseEntity {
     @Column(name = "location")
     private String location;
     
-    @Column(name = "phone_number")
-    private String phoneNumber;
-    
-    @Column(name = "farm_description", columnDefinition = "TEXT")
-    private String farmDescription;
-    
-    @Column(name = "established_year")
-    private Integer establishedYear;
-    
-    public void updateProfile(String nickname, String name, String profileImage) {
-        this.nickname = nickname;
+    public void updateProfile(String name, String farmName, String location) {
         this.name = name;
-        this.profileImage = profileImage;
-    }
-    
-    public void updateFarmInfo(String farmName, String location, String phoneNumber, 
-                              String farmDescription, Integer establishedYear) {
         this.farmName = farmName;
         this.location = location;
-        this.phoneNumber = phoneNumber;
-        this.farmDescription = farmDescription;
-        this.establishedYear = establishedYear;
     }
+
     
     public void upgradeToProMembership() {
         this.membershipType = MembershipType.PRO;

@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.fr.farmranding.common.exception.BusinessException;
 import org.fr.farmranding.common.code.FarmrandingResponseCode;
+import org.fr.farmranding.dto.request.UserSignupRequest;
+import org.fr.farmranding.dto.response.UserResponse;
 import org.fr.farmranding.dto.user.UserProfileResponse;
 import org.fr.farmranding.dto.user.UserProfileUpdateRequest;
 import org.fr.farmranding.dto.user.UserUsageResponse;
@@ -21,6 +23,18 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     
     @Override
+    public UserResponse completeSignup(User currentUser, UserSignupRequest request) {
+        // 사용자 이름 업데이트
+        currentUser.updateProfile(currentUser.getName(), request.farmName(), request.location());
+        
+        User savedUser = userRepository.save(currentUser);
+        log.info("신규 유저 정보 저장 완료: userId={}, name={}, farmName={}", 
+                currentUser.getId(), request.name(), request.farmName());
+        
+        return UserResponse.from(savedUser);
+    }
+    
+    @Override
     @Transactional(readOnly = true)
     public UserProfileResponse getUserProfile(Long userId) {
         User user = findUserById(userId);
@@ -32,16 +46,7 @@ public class UserServiceImpl implements UserService {
         User user = findUserById(userId);
         
         // 프로필 기본 정보 업데이트 (nickname, name, profileImage)
-        user.updateProfile(request.nickname(), request.name(), request.profileImage());
-        
-        // 농장 정보 업데이트
-        user.updateFarmInfo(
-                request.farmName(),
-                request.location(),
-                request.phoneNumber(),
-                request.farmDescription(),
-                request.establishedYear()
-        );
+        user.updateProfile(request.name(), request.farmName(), request.location());
         
         User savedUser = userRepository.save(user);
         log.info("사용자 프로필 수정 완료: userId={}", userId);
