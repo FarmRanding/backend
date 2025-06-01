@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fr.farmranding.entity.user.User;
 import org.fr.farmranding.jwt.JwtService;
 import org.fr.farmranding.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -22,7 +23,9 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     
     private final JwtService jwtService;
     private final UserRepository userRepository;
-    private static final String FRONTEND_URL = "http://localhost:5174";
+    
+    @Value("${farmranding.frontend-url}")
+    private String frontendUrl;    
     
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, 
@@ -44,8 +47,8 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         
         // URL 파라미터로 토큰과 신규 유저 정보 전달하여 프론트엔드로 리다이렉트
         String redirectUrl = String.format(
-                "%s/auth/callback?accessToken=%s&refreshToken=%s&userId=%d&email=%s&name=%s&membershipType=%s&isNewUser=%s",
-                FRONTEND_URL,
+                "%s/?accessToken=%s&refreshToken=%s&userId=%d&email=%s&name=%s&membershipType=%s&isNewUser=%s",
+                frontendUrl,
                 URLEncoder.encode(accessToken, StandardCharsets.UTF_8),
                 URLEncoder.encode(refreshToken, StandardCharsets.UTF_8),
                 user.getId(),
@@ -58,6 +61,6 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         response.sendRedirect(redirectUrl);
         
         log.info("OAuth2 로그인 성공 - 사용자 ID: {}, 이메일: {}, 신규 유저: {}, 리다이렉트: {}", 
-                user.getId(), user.getEmail(), isNewUser, FRONTEND_URL);
+                user.getId(), user.getEmail(), isNewUser, frontendUrl);
     }
 } 

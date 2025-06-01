@@ -1,7 +1,7 @@
-server:
-  port: 8081
-
 spring:
+  config:
+    import: env.properties
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -9,25 +9,21 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
-  config:
-    import: env.properties
-  datasource:
-    url: jdbc:mysql://localhost:${MYSQL_PORT}/${MYSQL_DATABASE}
-    username: ${MYSQL_USER}
-    password: ${MYSQL_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+
   security:
     oauth2:
       client:
         registration:
           kakao:
-            client-id: ${KAKAO_CLIENT_ID}
-            client-secret: ${KAKAO_CLIENT_SECRET}
+            client-id: "${KAKAO_CLIENT_ID}"
+            client-secret: "${KAKAO_CLIENT_SECRET}"
             client-name: Kakao
             authorization-grant-type: authorization_code
             client-authentication-method: client_secret_post
-            scope: profile_nickname,profile_image,account_email
-            redirect-uri: http://localhost:8081/login/oauth2/code/kakao
+            scope:
+              - profile_nickname
+              - profile_image
+              - account_email
         provider:
           kakao:
             authorization-uri: https://kauth.kakao.com/oauth/authorize
@@ -41,9 +37,9 @@ springdoc:
 
 farmranding:
   jwt:
-    secret: ${JWT_SECRET}
-    access-token-expiration: 3600000  # 1시간 (밀리초)
-    refresh-token-expiration: 604800000  # 7일 (밀리초)
+    secret: "${JWT_SECRET}"
+    access-token-expiration: 3600000      # 1시간 (밀리초)
+    refresh-token-expiration: 604800000   # 7일 (밀리초)
 
 logging:
   level:
