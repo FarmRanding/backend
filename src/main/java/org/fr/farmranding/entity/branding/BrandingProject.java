@@ -77,15 +77,6 @@ public class BrandingProject extends BaseEntity {
     @Column(name = "brand_image_url")
     private String brandImageUrl;
     
-    // 프로젝트 상태 및 진행 정보
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private BrandingStatus status;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(name = "current_step", nullable = false)
-    private BrandingStep currentStep;
-    
     // 비즈니스 메서드
     public void updateBasicInfo(String title, String cropName, String variety, 
                                String cultivationMethod, Grade grade) {
@@ -94,28 +85,23 @@ public class BrandingProject extends BaseEntity {
         this.variety = variety;
         this.cultivationMethod = cultivationMethod;
         this.grade = grade;
-        this.currentStep = BrandingStep.GAP_VERIFICATION;
     }
     
     public void updateGapInfo(String gapNumber, Boolean isGapVerified) {
         this.gapNumber = gapNumber;
         this.isGapVerified = isGapVerified;
-        this.currentStep = BrandingStep.BRANDING_KEYWORDS;
     }
     
     public void updateBrandingKeywords(List<String> brandingKeywords) {
         this.brandingKeywords = brandingKeywords;
-        this.currentStep = BrandingStep.CROP_APPEAL_KEYWORDS;
     }
     
     public void updateCropAppealKeywords(List<String> cropAppealKeywords) {
         this.cropAppealKeywords = cropAppealKeywords;
-        this.currentStep = BrandingStep.LOGO_IMAGE_KEYWORDS;
     }
     
     public void updateLogoImageKeywords(List<String> logoImageKeywords) {
         this.logoImageKeywords = logoImageKeywords;
-        this.currentStep = BrandingStep.BRAND_NAME_GENERATION;
     }
     
     public void completeBranding(String generatedBrandName, String promotionText, 
@@ -125,50 +111,38 @@ public class BrandingProject extends BaseEntity {
         this.brandStory = brandStory;
         this.brandConcept = brandConcept;
         this.brandImageUrl = brandImageUrl;
-        this.currentStep = BrandingStep.COMPLETE;
-        this.status = BrandingStatus.COMPLETED;
     }
     
-    public void updateBrandTexts(String promotionText, String brandStory, String brandConcept) {
+    /**
+     * 새로운 플로우: 모든 정보를 한 번에 설정하고 GPT 처리 후 완료
+     */
+    public void createCompleteProject(String title, String cropName, String variety, 
+                                    String cultivationMethod, Grade grade, Boolean hasGapCertification,
+                                    List<String> brandingKeywords, List<String> cropAppealKeywords, 
+                                    List<String> logoImageKeywords,
+                                    String generatedBrandName, String promotionText, 
+                                    String brandStory, String brandConcept, String brandImageUrl) {
+        // 기본 정보 설정
+        this.title = title;
+        this.cropName = cropName;
+        this.variety = variety;
+        this.cultivationMethod = cultivationMethod;
+        this.grade = grade;
+        
+        // GAP 인증 정보 설정
+        this.isGapVerified = hasGapCertification;
+        
+        // 키워드 정보 설정
+        this.brandingKeywords = brandingKeywords;
+        this.cropAppealKeywords = cropAppealKeywords;
+        this.logoImageKeywords = logoImageKeywords;
+        
+        // GPT 생성 결과 설정
+        this.generatedBrandName = generatedBrandName;
         this.promotionText = promotionText;
         this.brandStory = brandStory;
         this.brandConcept = brandConcept;
-    }
-    
-    public void updateBrandImage(String brandImageUrl) {
         this.brandImageUrl = brandImageUrl;
-    }
-    
-    public void updateStatus(BrandingStatus status) {
-        this.status = status;
-    }
-    
-    public void moveToNextStep() {
-        this.currentStep = this.currentStep.getNextStep();
-        
-        if (this.currentStep.isCompleted()) {
-            this.status = BrandingStatus.COMPLETED;
-        } else if (this.status == BrandingStatus.DRAFT) {
-            this.status = BrandingStatus.IN_PROGRESS;
-        }
-    }
-    
-    public boolean canEdit() {
-        return this.status.canEdit();
-    }
-    
-    public int getProgressPercentage() {
-        return this.currentStep.getProgressPercentage();
-    }
-    
-    public boolean hasImage() {
-        return brandImageUrl != null;
-    }
-    
-    public boolean isFullyCompleted() {
-        return status == BrandingStatus.COMPLETED && 
-               generatedBrandName != null && 
-               promotionText != null && 
-               brandStory != null;
+
     }
 } 

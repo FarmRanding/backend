@@ -1,8 +1,7 @@
 package org.fr.farmranding.repository;
 
 import org.fr.farmranding.entity.branding.BrandingProject;
-import org.fr.farmranding.entity.branding.BrandingStatus;
-import org.fr.farmranding.entity.branding.BrandingStep;
+
 import org.fr.farmranding.entity.branding.Grade;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,15 +18,9 @@ import java.util.Optional;
 public interface BrandingProjectRepository extends JpaRepository<BrandingProject, Long> {
     
     List<BrandingProject> findByUserId(Long userId);
-    
-    List<BrandingProject> findByUserIdAndStatus(Long userId, BrandingStatus status);
-    
-    List<BrandingProject> findByUserIdAndCurrentStep(Long userId, BrandingStep currentStep);
-    
+
     Page<BrandingProject> findByUserId(Long userId, Pageable pageable);
-    
-    Page<BrandingProject> findByUserIdAndStatus(Long userId, BrandingStatus status, Pageable pageable);
-    
+
     @Query("SELECT bp FROM BrandingProject bp WHERE bp.user.id = :userId AND bp.title LIKE %:keyword%")
     List<BrandingProject> findByUserIdAndTitleContaining(@Param("userId") Long userId, @Param("keyword") String keyword);
     
@@ -43,19 +36,12 @@ public interface BrandingProjectRepository extends JpaRepository<BrandingProject
                                                          @Param("endDate") LocalDateTime endDate);
     
     long countByUserId(Long userId);
-    
-    long countByUserIdAndStatus(Long userId, BrandingStatus status);
-    
-    long countByUserIdAndCurrentStep(Long userId, BrandingStep currentStep);
-    
+
     boolean existsByUserIdAndTitle(Long userId, String title);
     
     Optional<BrandingProject> findByIdAndUserId(Long id, Long userId);
     
     @Query("SELECT bp FROM BrandingProject bp WHERE bp.user.id = :userId ORDER BY bp.updatedAt DESC")
     List<BrandingProject> findRecentByUserId(@Param("userId") Long userId, Pageable pageable);
-    
-    @Query("SELECT bp FROM BrandingProject bp WHERE bp.status = :status AND bp.updatedAt < :cutoffDate")
-    List<BrandingProject> findStaleProjectsByStatus(@Param("status") BrandingStatus status, 
-                                                   @Param("cutoffDate") LocalDateTime cutoffDate);
+
 } 

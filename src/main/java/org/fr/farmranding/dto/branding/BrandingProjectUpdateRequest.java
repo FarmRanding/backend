@@ -2,8 +2,6 @@ package org.fr.farmranding.dto.branding;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Size;
-import org.fr.farmranding.entity.branding.BrandingStatus;
-import org.fr.farmranding.entity.branding.BrandingStep;
 import org.fr.farmranding.entity.branding.Grade;
 
 import java.util.List;
@@ -63,11 +61,5 @@ public record BrandingProjectUpdateRequest(
         String brandConcept,
         
         @Schema(description = "브랜드 이미지 URL", example = "https://storage.farmranding.com/brands/12345.png")
-        String brandImageUrl,
-        
-        @Schema(description = "프로젝트 상태", example = "IN_PROGRESS")
-        BrandingStatus status,
-        
-        @Schema(description = "현재 진행 단계", example = "BRANDING_KEYWORDS")
-        BrandingStep currentStep
+        String brandImageUrl
 ) {} 

@@ -1,6 +1,7 @@
 package org.fr.farmranding.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -46,7 +47,7 @@ public class MembershipController {
     })
     @GetMapping("/plans/type/{membershipType}")
     public ResponseEntity<FarmrandingResponseBody<MembershipPlanResponse>> getMembershipPlanByType(
-            @PathVariable MembershipType membershipType) {
+            @PathVariable @Parameter(description = "멤버십 타입") MembershipType membershipType) {
         
         MembershipPlanResponse response = membershipService.getMembershipPlanByType(membershipType);
         return ResponseEntity.ok(FarmrandingResponseBody.success(response));
@@ -92,7 +93,7 @@ public class MembershipController {
     })
     @GetMapping("/admin/plans/{planId}")
     public ResponseEntity<FarmrandingResponseBody<MembershipPlanResponse>> getMembershipPlan(
-            @PathVariable Long planId) {
+            @PathVariable @Parameter(description = "플랜 ID") Long planId) {
         
         MembershipPlanResponse response = membershipService.getMembershipPlan(planId);
         return ResponseEntity.ok(FarmrandingResponseBody.success(response));
@@ -121,7 +122,7 @@ public class MembershipController {
     })
     @PutMapping("/admin/plans/{planId}")
     public ResponseEntity<FarmrandingResponseBody<MembershipPlanResponse>> updateMembershipPlan(
-            @PathVariable Long planId,
+            @PathVariable @Parameter(description = "플랜 ID") Long planId,
             @Valid @RequestBody MembershipPlanUpdateRequest request) {
         
         MembershipPlanResponse response = membershipService.updateMembershipPlan(planId, request);
@@ -137,7 +138,7 @@ public class MembershipController {
     })
     @DeleteMapping("/admin/plans/{planId}")
     public ResponseEntity<FarmrandingResponseBody<Void>> deleteMembershipPlan(
-            @PathVariable Long planId) {
+            @PathVariable @Parameter(description = "플랜 ID") Long planId) {
         
         membershipService.deleteMembershipPlan(planId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT)
@@ -153,7 +154,7 @@ public class MembershipController {
     })
     @PatchMapping("/admin/plans/{planId}/toggle-status")
     public ResponseEntity<FarmrandingResponseBody<MembershipPlanResponse>> togglePlanStatus(
-            @PathVariable Long planId) {
+            @PathVariable @Parameter(description = "플랜 ID") Long planId) {
         
         MembershipPlanResponse response = membershipService.togglePlanStatus(planId);
         return ResponseEntity.ok(FarmrandingResponseBody.success(response));
@@ -168,7 +169,7 @@ public class MembershipController {
     })
     @PatchMapping("/admin/plans/{planId}/set-popular")
     public ResponseEntity<FarmrandingResponseBody<MembershipPlanResponse>> setPopularPlan(
-            @PathVariable Long planId) {
+            @PathVariable @Parameter(description = "플랜 ID") Long planId) {
         
         MembershipPlanResponse response = membershipService.setPopularPlan(planId);
         return ResponseEntity.ok(FarmrandingResponseBody.success(response));
