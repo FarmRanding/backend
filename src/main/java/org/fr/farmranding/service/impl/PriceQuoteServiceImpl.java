@@ -36,6 +36,22 @@ public class PriceQuoteServiceImpl implements PriceQuoteService {
         BigDecimal maxPrice = new BigDecimal("20000"); 
         BigDecimal avgPrice = new BigDecimal("16000");
         BigDecimal fairPrice = new BigDecimal("18000");
+        String analysisResult = String.format(
+            "현재 %s(%s) %s 등급 시장 분석 결과:\n" +
+            "• 시장 최저가: %s원/%s\n" +
+            "• 시장 최고가: %s원/%s\n" +
+            "• 시장 평균가: %s원/%s\n" +
+            "• AI 추천가격: %s원/%s\n\n" +
+            "수확 시기와 품질을 고려할 때, %s원이 적정 판매가격으로 분석됩니다.",
+            request.cropName(), 
+            request.variety() != null ? request.variety() : "일반",
+            request.grade(),
+            minPrice, request.unit(),
+            maxPrice, request.unit(),
+            avgPrice, request.unit(),
+            fairPrice, request.unit(),
+            fairPrice
+        );
         
         PriceQuoteRequest priceQuote = PriceQuoteRequest.builder()
                 .user(currentUser)
@@ -49,6 +65,7 @@ public class PriceQuoteServiceImpl implements PriceQuoteService {
                 .maxPrice(maxPrice)
                 .avgPrice(avgPrice)
                 .fairPrice(fairPrice)
+                .analysisResult(analysisResult)
                 .build();
         
         PriceQuoteRequest savedPriceQuote = priceQuoteRequestRepository.save(priceQuote);
@@ -56,7 +73,7 @@ public class PriceQuoteServiceImpl implements PriceQuoteService {
         // 사용량 증가
         currentUser.incrementPricingSuggestionUsage();
         
-        log.info("가격 견적 요청 생성 완료 - 사용자: {}, ID: {}", currentUser.getId(), savedPriceQuote.getId());
+        log.info("가격 견적 요청 생성 완료 - 사용자: {}, ID: {}, 추천가격: {}", currentUser.getId(), savedPriceQuote.getId(), fairPrice);
         
         return PriceQuoteResponse.from(savedPriceQuote);
     }

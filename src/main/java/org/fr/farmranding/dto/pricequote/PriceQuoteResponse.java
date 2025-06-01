@@ -28,25 +28,28 @@ public record PriceQuoteResponse(
         @Schema(description = "수확 예정일", example = "2024-02-15")
         LocalDate harvestDate,
         
-        @Schema(description = "예상 가격 (원)", example = "15000")
-        BigDecimal estimatedPrice,
+        @Schema(description = "최저가 (원)", example = "12000")
+        BigDecimal minPrice,
         
-        @Schema(description = "최종 가격 (원)", example = "18000")
-        BigDecimal finalPrice,
+        @Schema(description = "최고가 (원)", example = "20000")
+        BigDecimal maxPrice,
         
-        @Schema(description = "분석 결과", example = "시장 상황을 고려할 때 kg당 18,000원이 적정 가격으로 분석됩니다.")
+        @Schema(description = "평균가 (원)", example = "16000")
+        BigDecimal avgPrice,
+        
+        @Schema(description = "AI 추천가격 (원)", example = "18000")
+        BigDecimal fairPrice,
+        
+        @Schema(description = "AI 분석 결과", example = "현재 시장 상황을 고려할 때 kg당 18,000원이 적정 가격으로 분석됩니다.")
         String analysisResult,
         
-        @Schema(description = "완료 여부", example = "true")
-        Boolean isCompleted,
+        @Schema(description = "단위", example = "kg")
+        String unit,
         
-        @Schema(description = "예상 가격 보유 여부", example = "true")
-        Boolean hasEstimatedPrice,
+        @Schema(description = "수량", example = "1")
+        Integer quantity,
         
-        @Schema(description = "최종 가격 보유 여부", example = "true")
-        Boolean hasFinalPrice,
-        
-        @Schema(description = "분석 결과 보유 여부", example = "true")
+        @Schema(description = "분석 완료 여부", example = "true")
         Boolean hasAnalysisResult,
         
         @Schema(description = "생성일시", example = "2024-01-15T10:30:00")
@@ -63,12 +66,13 @@ public record PriceQuoteResponse(
                 request.getVariety(),
                 request.getGrade(),
                 request.getHarvestDate(),
-                request.getEstimatedPrice(),
-                request.getFinalPrice(),
+                request.getMinPrice(),
+                request.getMaxPrice(),
+                request.getAvgPrice(),
+                request.getFairPrice(),
                 request.getAnalysisResult(),
-                request.isCompleted(),
-                request.hasEstimatedPrice(),
-                request.hasFinalPrice(),
+                request.getUnit(),
+                request.getQuantity(),
                 request.hasAnalysisResult(),
                 request.getCreatedAt(),
                 request.getUpdatedAt()

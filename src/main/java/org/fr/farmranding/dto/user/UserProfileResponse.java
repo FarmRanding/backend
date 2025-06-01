@@ -19,6 +19,9 @@ public record UserProfileResponse(
         @Schema(description = "닉네임", example = "농부김씨")
         String nickname,
         
+        @Schema(description = "이름", example = "김농부")
+        String name,
+        
         @Schema(description = "프로필 이미지 URL", example = "https://example.com/profile.jpg")
         String profileImage,
         
@@ -51,6 +54,7 @@ public record UserProfileResponse(
                 user.getId(),
                 user.getEmail(),
                 user.getNickname(),
+                user.getName(),
                 user.getProfileImage(),
                 user.getProvider(),
                 user.getMembershipType(),

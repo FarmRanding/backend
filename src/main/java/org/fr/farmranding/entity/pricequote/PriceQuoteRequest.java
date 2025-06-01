@@ -49,6 +49,10 @@ public class PriceQuoteRequest extends BaseEntity {
     @Column(name = "fair_price", precision = 10, scale = 2)
     private BigDecimal fairPrice;
     
+    // AI 분석 결과
+    @Column(name = "analysis_result", columnDefinition = "TEXT")
+    private String analysisResult;
+    
     // 추가 정보
     @Column(name = "unit", nullable = false)
     private String unit;
@@ -64,10 +68,15 @@ public class PriceQuoteRequest extends BaseEntity {
         this.harvestDate = harvestDate;
     }
     
-    public void updatePriceInfo(BigDecimal minPrice, BigDecimal maxPrice, BigDecimal avgPrice, BigDecimal fairPrice) {
+    public void updatePriceInfo(BigDecimal minPrice, BigDecimal maxPrice, BigDecimal avgPrice, BigDecimal fairPrice, String analysisResult) {
         this.minPrice = minPrice;
         this.maxPrice = maxPrice;
         this.avgPrice = avgPrice;
         this.fairPrice = fairPrice;
+        this.analysisResult = analysisResult;
+    }
+    
+    public boolean hasAnalysisResult() {
+        return fairPrice != null && analysisResult != null && !analysisResult.trim().isEmpty();
     }
 } 

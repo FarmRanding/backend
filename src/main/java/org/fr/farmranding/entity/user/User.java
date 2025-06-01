@@ -25,6 +25,9 @@ public class User extends BaseEntity {
     @Column(name = "nickname", nullable = false)
     private String nickname;
     
+    @Column(name = "name")
+    private String name;
+    
     @Column(name = "profile_image")
     private String profileImage;
     
@@ -63,8 +66,9 @@ public class User extends BaseEntity {
     @Column(name = "established_year")
     private Integer establishedYear;
     
-    public void updateProfile(String nickname, String profileImage) {
+    public void updateProfile(String nickname, String name, String profileImage) {
         this.nickname = nickname;
+        this.name = name;
         this.profileImage = profileImage;
     }
     
