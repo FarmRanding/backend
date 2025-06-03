@@ -227,7 +227,7 @@ public class BrandingServiceImpl implements BrandingService {
         String cropName = request.cropName();
         String variety = request.variety() != null ? request.variety() : "";
         String cultivationMethod = request.cultivationMethod() != null ? request.cultivationMethod() : "";
-        String grade = request.grade() != null ? request.grade().name() : "";
+        String grade = request.grade() != null ? request.grade().getKoreanName() : "";
         String location = currentUser.getLocation() != null ? currentUser.getLocation() : "";
         String gapNumber = ""; // BrandingProjectCreateRequest에 gapNumber가 없음
         String brandImageKeywords = String.join(", ", request.logoImageKeywords());
