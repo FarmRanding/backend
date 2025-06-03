@@ -1,0 +1,78 @@
+name: 🚀 팜랜딩 백엔드 배포
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    name: 🏗️ 빌드 및 배포
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE_NAME: kanguk/farmranding
+
+    steps:
+      # 1️⃣ 코드 체크아웃
+      - name: 📥 코드 체크아웃
+        uses: actions/checkout@v4
+
+      # 2️⃣ Docker Buildx 설정
+      - name: 🐳 Docker Buildx 설정
+        uses: docker/setup-buildx-action@v3
+
+      # 3️⃣ DockerHub 로그인
+      - name: 🔐 DockerHub 로그인
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 4️⃣ Docker 이미지 빌드 & 푸시 (커밋 SHA 태그)
+      - name: 🏗️ Docker 이미지 빌드 & 푸시
+        run: |
+          echo "🔨 커밋 SHA 태그로 이미지 빌드 및 푸시"
+          docker buildx build --push --platform linux/amd64 \
+            -t $IMAGE_NAME:${{ github.sha }} .
+
+      # 5️⃣ EC2 SSH 키 복사
+      - name: 🔑 EC2 SSH 키 복사
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/farmranding.pem
+          chmod 600 ~/.ssh/farmranding.pem
+
+      # 6️⃣ EC2에 배포 및 컨테이너 교체
+      - name: 🚀 EC2에 배포 및 컨테이너 교체
+        run: |
+          echo "🖥️ EC2에 접속하여 컨테이너 교체 및 이미지 정리"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/farmranding.pem ubuntu@ec2-43-200-92-45.ap-northeast-2.compute.amazonaws.com << 'EOF'
+            set -e
+
+            echo "🗑️ 최신 5개 이미지만 남기고 나머지 삭제"
+            docker images --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' | \
+              grep '^kanguk/farmranding:' | \
+              sort -rk2 | \
+              awk 'NR>5 {print \$1}' | \
+              xargs -r docker rmi || true
+
+            echo "🛑 기존 컨테이너 중지 및 삭제"
+            docker rm -f farmranding || true
+
+            echo "⬇️ 새 이미지 pull"
+            docker pull kanguk/farmranding:${{ github.sha }}
+
+            echo "🚀 새 컨테이너 실행"
+            docker run --name farmranding --env-file /home/ubuntu/env.properties -p 8080:8080 -d kanguk/farmranding:${{ github.sha }}
+
+            echo "✅ 배포 및 이미지 정리 완료"
+          EOF
+
+      # 7️⃣ 배포 완료 알림
+      - name: 🎉 배포 완료
+        run: |
+          echo "🎉 팜랜딩 백엔드 배포가 성공적으로 완료되었습니다!"
+          echo "🌐 API 서버: http://ec2-43-200-92-45.ap-northeast-2.compute.amazonaws.com:8080"
+          echo "📅 배포 시간: $(date)"
