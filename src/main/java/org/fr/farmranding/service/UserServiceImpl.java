@@ -92,6 +92,18 @@ public class UserServiceImpl implements UserService {
     }
     
     @Override
+    public void validateAiBrandingUsage(Long userId) {
+        User user = findUserById(userId);
+        
+        if (!user.canUseAiBranding()) {
+            throw new BusinessException(FarmrandingResponseCode.AI_BRANDING_USAGE_LIMIT_EXCEEDED);
+        }
+        
+        log.debug("AI 브랜딩 사용량 검증 통과: userId={}, remaining={}", 
+                userId, user.getMembershipType().getAiBrandingLimit() - user.getAiBrandingUsageCount());
+    }
+    
+    @Override
     public void incrementPricingSuggestionUsage(Long userId) {
         User user = findUserById(userId);
         

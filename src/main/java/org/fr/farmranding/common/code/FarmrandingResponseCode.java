@@ -57,6 +57,13 @@ public enum FarmrandingResponseCode {
     MEMBERSHIP_PLAN_NOT_FOUND(HttpStatus.NOT_FOUND, "FR431", "멤버십 플랜을 찾을 수 없습니다"),
     MEMBERSHIP_PLAN_ALREADY_EXISTS(HttpStatus.CONFLICT, "FR432", "이미 존재하는 멤버십 플랜입니다"),
     
+    // AI SERVICES (FR440~)
+    AI_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "FR441", "AI 서비스 호출 중 오류가 발생했습니다"),
+    AI_RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "FR442", "AI 서비스 요청 한도를 초과했습니다"),
+    AI_CONTENT_POLICY_VIOLATION(HttpStatus.BAD_REQUEST, "FR443", "AI 서비스 콘텐츠 정책 위반입니다"),
+    AI_PROMPT_TOO_LONG(HttpStatus.BAD_REQUEST, "FR444", "AI 프롬프트가 너무 깁니다"),
+    AI_GENERATION_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "FR445", "AI 콘텐츠 생성에 실패했습니다"),
+    
     // SERVER ERROR
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "FR500", "서버 내부 오류가 발생했습니다"),
     EXTERNAL_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "FR501", "외부 API 호출에 실패했습니다");

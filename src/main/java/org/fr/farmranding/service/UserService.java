@@ -40,6 +40,11 @@ public interface UserService {
     void incrementAiBrandingUsage(Long userId);
     
     /**
+     * AI 브랜딩 사용 가능 여부 검증 (사용량 체크)
+     */
+    void validateAiBrandingUsage(Long userId);
+    
+    /**
      * 가격 제안 사용량 증가
      */
     void incrementPricingSuggestionUsage(Long userId);

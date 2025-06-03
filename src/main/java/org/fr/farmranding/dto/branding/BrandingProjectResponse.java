@@ -46,8 +46,11 @@ public record BrandingProjectResponse(
         @Schema(description = "GAP 인증 여부", example = "true")
         Boolean isGapVerified,
         
+        @Schema(description = "생성된 브랜드명", example = "뽀사과")
+        String generatedBrandName,
+        
         @Schema(description = "홍보 문구", example = "김씨농장 프리미엄 토마토와 함께하는 건강한 삶")
-        String promotionText,
+        String brandConcept,
         
         @Schema(description = "브랜드 스토리", example = "3대째 이어온 전통 농법으로 정성스럽게 키운 프리미엄 토마토입니다.")
         String brandStory,
@@ -76,8 +79,9 @@ public record BrandingProjectResponse(
                 project.getGapNumber(),
                 project.getIsGapVerified(),
                 project.getGeneratedBrandName(),
-                project.getPromotionText(),
+                project.getBrandConcept(),
                 project.getBrandStory(),
+                project.getBrandImageUrl(),
                 project.getCreatedAt(),
                 project.getUpdatedAt()
         );

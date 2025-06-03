@@ -40,4 +40,14 @@ public interface BrandingService {
      */
     void deleteBrandingProject(Long projectId, User currentUser);
 
+    /**
+     * 브랜드명만 빠르게 생성 (빠른 모델 사용)
+     */
+    String generateBrandName(org.fr.farmranding.dto.branding.BrandNameRequest request, org.fr.farmranding.entity.user.User currentUser, String prompt);
+
+    /**
+     * 최종 브랜드 생성 (로고, 컨셉, 스토리 포함, 프롬프트는 파라미터)
+     */
+    BrandingProjectResponse createBrandingProjectWithAi(org.fr.farmranding.dto.branding.BrandingProjectCreateRequest request, org.fr.farmranding.entity.user.User currentUser, String brandName, String promptForLogo, String promptForConcept, String promptForStory);
+
 }

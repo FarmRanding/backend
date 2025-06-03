@@ -3,6 +3,13 @@ spring:
     activate:
       on-profile: local
 
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:sk-your-key-here}
+      chat:
+        options:
+          model: gpt-4o-mini
+          temperature: 0.7
 
   datasource:
     url: "jdbc:mysql://localhost:${MYSQL_PORT}/${MYSQL_DATABASE}"
