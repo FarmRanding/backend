@@ -37,7 +37,7 @@ public class S3ImageStorageService implements ImageStorageService {
                 brandName.replaceAll("[^a-zA-Z0-9가-힣]", "_"), 
                 UUID.randomUUID().toString().substring(0, 8));
             
-            // S3에 업로드
+            // S3에 퍼블릭 읽기 권한으로 업로드
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(fileName)
@@ -46,7 +46,7 @@ public class S3ImageStorageService implements ImageStorageService {
             
             s3Client.putObject(putObjectRequest, RequestBody.fromBytes(imageBytes));
             
-            // S3 URL 생성
+            // 퍼블릭 URL 생성
             String imageUrl = String.format("https://%s.s3.%s.amazonaws.com/%s", 
                 bucketName, region, fileName);
             
@@ -62,8 +62,14 @@ public class S3ImageStorageService implements ImageStorageService {
     @Override
     public void deleteImage(String imageUrl) {
         try {
-            // URL에서 키 추출 (파일명)
-            String key = imageUrl.substring(imageUrl.indexOf(".amazonaws.com/") + 15);
+            // URL에서 키 추출
+            String key;
+            if (imageUrl.contains("amazonaws.com/")) {
+                key = imageUrl.substring(imageUrl.indexOf("amazonaws.com/") + 14);
+            } else {
+                log.warn("S3 URL 형식이 올바르지 않습니다: {}", imageUrl);
+                return;
+            }
             
             DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
                     .bucket(bucketName)
