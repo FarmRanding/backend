@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.fr.farmranding.common.code.FarmrandingResponseCode;
 import org.fr.farmranding.common.exception.BusinessException;
-import org.fr.farmranding.entity.user.SocialProvider;
 import org.fr.farmranding.entity.user.User;
 import org.fr.farmranding.repository.UserRepository;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -41,20 +40,18 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     "OAuth2 제공자로부터 이메일 정보를 가져올 수 없습니다.");
         }
         
-        SocialProvider provider = SocialProvider.fromString(registrationId);
-        User user = userRepository.findByProviderAndProviderId(provider, userInfo.getId())
-                .orElseGet(() -> createUser(userInfo, provider));
+        User user = userRepository.findByProviderId(userInfo.getId())
+                .orElseGet(() -> createUser(userInfo));
         
         return new CustomOAuth2User(
                 oAuth2User,
                 user.getProviderId(),
-                user.getNickname(),
-                user.getProfileImage(),
+                user.getName(),
                 user.getEmail()
         );
     }
     
-    private User createUser(OAuth2UserInfo userInfo, SocialProvider provider) {
+    private User createUser(OAuth2UserInfo userInfo) {
         // 이메일 중복 체크
         if (userRepository.existsByEmail(userInfo.getEmail())) {
             throw new BusinessException(FarmrandingResponseCode.USER_ALREADY_EXISTS, 
@@ -63,9 +60,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         
         User user = User.builder()
                 .email(userInfo.getEmail())
-                .nickname(userInfo.getName())
-                .profileImage(userInfo.getImageUrl())
-                .provider(provider)
+                .name(userInfo.getName())
                 .providerId(userInfo.getId())
                 .build();
         

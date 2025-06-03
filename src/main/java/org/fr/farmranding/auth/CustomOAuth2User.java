@@ -15,7 +15,6 @@ public class CustomOAuth2User implements OAuth2User {
     private final OAuth2User oauth2User;
     private final String providerId;
     private final String nickname;
-    private final String profileImage;
     private final String email;
     
     @Override

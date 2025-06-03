@@ -1,0 +1,24 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+
+  datasource:
+    url: "jdbc:mysql://${MYSQL_PROD_HOST}:${MYSQL_PROD_PORT}/${MYSQL_PROD_DATABASE}?useSSL=true&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
+    username: "${MYSQL_PROD_USER}"
+    password: "${MYSQL_PROD_PASSWORD}"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            redirect-uri: https://${PROD_HOST}/login/oauth2/code/kakao
+
+server:
+  port: 8080
+
+farmranding:
+  frontend-url: https://${PROD_HOST}

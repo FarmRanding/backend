@@ -42,7 +42,7 @@ public class JwtServiceImpl implements JwtService {
         return Jwts.builder()
                 .subject(user.getId().toString())
                 .claim("email", user.getEmail())
-                .claim("nickname", user.getNickname())
+                .claim("name", user.getName())
                 .claim("membershipType", user.getMembershipType().name())
                 .issuedAt(now)
                 .expiration(expiryDate)
