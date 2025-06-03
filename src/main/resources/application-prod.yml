@@ -24,8 +24,23 @@ spring:
           kakao:
             redirect-uri: https://${PROD_HOST}/login/oauth2/code/kakao
 
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY_ID}
+        secret-key: ${AWS_SECRET_ACCESS_KEY}
+      region:
+        static: ${AWS_REGION}
+      s3:
+        region: ${AWS_REGION}
+
 server:
   port: 8080
 
 farmranding:
   frontend-url: https://${PROD_HOST}
+  image:
+    storage-type: s3  # S3 사용
+    s3:
+      bucket-name: ${S3_BUCKET_NAME}
+      region: ${AWS_REGION}
