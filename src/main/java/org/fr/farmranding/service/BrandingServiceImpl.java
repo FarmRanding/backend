@@ -19,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -244,45 +246,111 @@ public class BrandingServiceImpl implements BrandingService {
         String logoPrompt = createLogoImagePrompt(brandName, cropName, variety, brandImageKeywords, cropAppealKeywords);
 
         try {
-            // 1. 브랜드 로고 생성 (완벽한 영문 프롬프트 적용)
-            String logoUrl = imageGenerationService.generateBrandLogo(brandName, request.brandingKeywords(), logoPrompt);
-
-            // 2. 홍보 문구/스토리 생성 (ChatModel 직접 사용)
-            ChatResponse conceptResponse = chatModel.call(
-                new Prompt(conceptAndStoryPrompt, OpenAiChatOptions.builder()
-                    .model("gpt-4o-mini")
-                    .maxTokens(1000)
-                    .temperature(0.8)
-                    .build())
-            );
+            log.info("브랜딩 생성 시작: brandName={}, cropName={}", brandName, cropName);
+            long startTime = System.currentTimeMillis();
             
-            String fullResponse = conceptResponse.getResult().getOutput().getText();
-            
-            // 응답 파싱 (홍보 문구/판매 글 분리)
-            String concept = "";
-            String story = "";
-            
-            if (fullResponse.contains("홍보 문구:") && fullResponse.contains("판매 글:")) {
+            // 1. 로고 생성 (비동기)
+            CompletableFuture<String> logoFuture = CompletableFuture.supplyAsync(() -> {
                 try {
-                    int conceptStart = fullResponse.indexOf("홍보 문구:") + 6;
-                    int storyStart = fullResponse.indexOf("판매 글:");
+                    log.info("로고 생성 시작: brandName={}", brandName);
+                    long logoStartTime = System.currentTimeMillis();
                     
-                    if (conceptStart > 5 && storyStart > conceptStart) {
-                        concept = fullResponse.substring(conceptStart, storyStart).trim();
-                        story = fullResponse.substring(storyStart + 5).trim();
+                    String logoUrl = imageGenerationService.generateBrandLogo(brandName, request.brandingKeywords(), logoPrompt);
+                    
+                    long logoEndTime = System.currentTimeMillis();
+                    log.info("로고 생성 완료: brandName={}, 소요시간={}ms", brandName, logoEndTime - logoStartTime);
+                    
+                    return logoUrl;
+                } catch (Exception e) {
+                    log.error("로고 생성 실패: brandName={}, error={}", brandName, e.getMessage());
+                    throw new RuntimeException("로고 생성 실패", e);
+                }
+            });
+
+            // 2. 홍보 문구/스토리 생성 (비동기)
+            CompletableFuture<String[]> conceptStoryFuture = CompletableFuture.supplyAsync(() -> {
+                try {
+                    log.info("홍보 문구/스토리 생성 시작: brandName={}", brandName);
+                    long conceptStartTime = System.currentTimeMillis();
+                    
+                    ChatResponse conceptResponse = chatModel.call(
+                        new Prompt(conceptAndStoryPrompt, OpenAiChatOptions.builder()
+                            .model("gpt-4o-mini")
+                            .maxTokens(1000)
+                            .temperature(0.8)
+                            .build())
+                    );
+                    
+                    String fullResponse = conceptResponse.getResult().getOutput().getText();
+                    
+                    // 응답 파싱 (홍보 문구/판매 글 분리)
+                    String concept = "";
+                    String story = "";
+                    
+                    if (fullResponse.contains("홍보 문구:") && fullResponse.contains("판매 글:")) {
+                        try {
+                            int conceptStart = fullResponse.indexOf("홍보 문구:") + 6;
+                            int storyStart = fullResponse.indexOf("판매 글:");
+                            
+                            if (conceptStart > 5 && storyStart > conceptStart) {
+                                concept = fullResponse.substring(conceptStart, storyStart).trim();
+                                story = fullResponse.substring(storyStart + 5).trim();
+                            } else {
+                                concept = fullResponse.trim();
+                                story = "정성과 사랑으로 키운 " + brandName + "입니다.";
+                            }
+                        } catch (Exception e) {
+                            log.warn("응답 파싱 실패, 기본값 사용: {}", e.getMessage());
+                            concept = fullResponse.trim();
+                            story = "정성과 사랑으로 키운 " + brandName + "입니다.";
+                        }
                     } else {
                         concept = fullResponse.trim();
                         story = "정성과 사랑으로 키운 " + brandName + "입니다.";
                     }
+                    
+                    long conceptEndTime = System.currentTimeMillis();
+                    log.info("홍보 문구/스토리 생성 완료: brandName={}, 소요시간={}ms", brandName, conceptEndTime - conceptStartTime);
+                    
+                    return new String[]{concept, story};
+                    
                 } catch (Exception e) {
-                    log.warn("응답 파싱 실패, 기본값 사용: {}", e.getMessage());
-                    concept = fullResponse.trim();
-                    story = "정성과 사랑으로 키운 " + brandName + "입니다.";
+                    log.error("홍보 문구/스토리 생성 실패: brandName={}, error={}", brandName, e.getMessage());
+                    // Fallback 값 반환
+                    return new String[]{
+                        brandName + "과 함께하는 건강한 삶",
+                        "정성과 사랑으로 키운 " + brandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다."
+                    };
                 }
-            } else {
-                concept = fullResponse.trim();
-                story = "정성과 사랑으로 키운 " + brandName + "입니다.";
+            });
+
+            // 3. 두 작업 완료 대기 (개별 타임아웃 적용)
+            String logoUrl;
+            String[] conceptStory;
+            
+            try {
+                // 로고 생성 대기 (최대 60초)
+                logoUrl = logoFuture.get(60, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                log.error("로고 생성 타임아웃 또는 실패: brandName={}, error={}", brandName, e.getMessage());
+                logoUrl = null; // 로고 없이 진행
             }
+            
+            try {
+                // 홍보 문구/스토리 대기 (최대 15초 - 보통 5초 내 완료)
+                conceptStory = conceptStoryFuture.get(15, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                log.error("홍보 문구/스토리 생성 타임아웃 또는 실패: brandName={}, error={}", brandName, e.getMessage());
+                // Fallback 값 사용
+                conceptStory = new String[]{
+                    brandName + "과 함께하는 건강한 삶",
+                    "정성과 사랑으로 키운 " + brandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다."
+                };
+            }
+            
+            long totalTime = System.currentTimeMillis() - startTime;
+            log.info("브랜딩 생성 완료: brandName={}, 총 소요시간={}ms, logoSuccess={}", 
+                brandName, totalTime, logoUrl != null);
 
             BrandingProject project = BrandingProject.builder()
                     .title(request.title())
@@ -295,12 +363,15 @@ public class BrandingServiceImpl implements BrandingService {
                     .cropAppealKeywords(request.cropAppealKeywords())
                     .logoImageKeywords(request.logoImageKeywords())
                     .generatedBrandName(brandName)
-                    .brandImageUrl(logoUrl)
-                    .brandConcept(concept)
-                    .brandStory(story)
+                    .brandImageUrl(logoUrl) // null일 수 있음
+                    .brandConcept(conceptStory[0])
+                    .brandStory(conceptStory[1])
                     .build();
+            
             BrandingProject savedProject = brandingProjectRepository.save(project);
-            log.info("AI 기반 브랜딩 프로젝트 생성 완료: projectId={}, userId={}", savedProject.getId(), currentUser.getId());
+            log.info("AI 기반 브랜딩 프로젝트 생성 완료: projectId={}, userId={}, 총 처리시간={}ms", 
+                savedProject.getId(), currentUser.getId(), totalTime);
+            
             return BrandingProjectResponse.from(savedProject);
             
         } catch (Exception e) {

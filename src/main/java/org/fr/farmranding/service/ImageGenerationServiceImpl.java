@@ -84,7 +84,11 @@ public class ImageGenerationServiceImpl implements ImageGenerationService {
     private String processImageResponse(ResponseEntity<Map> response, String brandName) {
         if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
             Map<String, Object> responseBody = response.getBody();
-            log.debug("gpt-image-1 API 응답: {}", responseBody);
+            
+            // 응답 정보를 간결하게 로깅 (base64 데이터 제외)
+            Map<String, Object> usage = (Map<String, Object>) responseBody.get("usage");
+            log.debug("gpt-image-1 API 응답 요약: created={}, usage={}", 
+                responseBody.get("created"), usage);
             
             List<Map<String, Object>> data = (List<Map<String, Object>>) responseBody.get("data");
             
@@ -94,9 +98,13 @@ public class ImageGenerationServiceImpl implements ImageGenerationService {
                     try {
                         // base64 이미지를 바이트 배열로 변환 후 저장소에 저장
                         byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+                        
+                        log.debug("이미지 데이터 변환 완료: brandName={}, base64Length={}KB, imageSize={}KB", 
+                            brandName, base64Image.length() / 1024, imageBytes.length / 1024);
+                        
                         String imageUrl = imageStorageService.saveImage(imageBytes, brandName);
                         
-                        log.info("브랜드 로고 이미지 생성 완료 (gpt-image-1): brandName={}, imageUrl={}", brandName, imageUrl);
+                        log.info("브랜드 로고 이미지 생성 완료 (gpt-image-1): brandName={}", brandName);
                         return imageUrl;
                     } catch (Exception e) {
                         log.error("이미지 저장 실패: brandName={}, error={}", brandName, e.getMessage());
@@ -105,10 +113,10 @@ public class ImageGenerationServiceImpl implements ImageGenerationService {
                 }
             }
             
-            log.error("gpt-image-1 API 응답에서 이미지 데이터를 찾을 수 없습니다: brandName={}, response={}", brandName, responseBody);
+            log.error("gpt-image-1 API 응답에서 이미지 데이터를 찾을 수 없습니다: brandName={}", brandName);
             throw new BusinessException(FarmrandingResponseCode.AI_GENERATION_FAILED);
         } else {
-            log.error("gpt-image-1 API 호출 실패: brandName={}, status={}, body={}", brandName, response.getStatusCode(), response.getBody());
+            log.error("gpt-image-1 API 호출 실패: brandName={}, status={}", brandName, response.getStatusCode());
             throw new BusinessException(FarmrandingResponseCode.AI_GENERATION_FAILED);
         }
     }
