@@ -50,6 +50,9 @@ farmranding:
     secret: "${JWT_SECRET}"
     access-token-expiration: 3600000      # 1시간 (밀리초)
     refresh-token-expiration: 604800000   # 7일 (밀리초)
+  gap:
+    api-url: ${GAP_API_URL}
+    api-key: ${GAP_API_KEY}
 
 logging:
   level:

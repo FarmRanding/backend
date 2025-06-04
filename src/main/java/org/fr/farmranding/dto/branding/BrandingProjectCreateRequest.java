@@ -35,9 +35,6 @@ public record BrandingProjectCreateRequest(
         @Schema(description = "농가명 포함 여부 (판매글에만 영향)", example = "true", defaultValue = "false")
         Boolean includeFarmName,
         
-        @Schema(description = "GAP 인증 여부", example = "true")
-        Boolean hasGapCertification,
-        
         @NotEmpty(message = "브랜딩 키워드는 최소 1개 이상 선택해야 합니다.")
         @Size(max = 10, message = "브랜딩 키워드는 최대 10개까지 선택할 수 있습니다.")
         @Schema(description = "브랜딩 키워드 목록", example = "[\"프리미엄\", \"건강한\", \"신선한\"]", required = true)
@@ -51,5 +48,17 @@ public record BrandingProjectCreateRequest(
         @NotEmpty(message = "로고 이미지 키워드는 최소 1개 이상 선택해야 합니다.")
         @Size(max = 10, message = "로고 이미지 키워드는 최대 10개까지 선택할 수 있습니다.")
         @Schema(description = "로고 이미지 키워드 목록", example = "[\"자연스러운\", \"모던한\", \"클래식한\"]", required = true)
-        List<String> logoImageKeywords
+        List<String> logoImageKeywords,
+        
+        @Schema(description = "GAP 인증 보유 여부", example = "true")
+        Boolean hasGapCertification,
+        
+        @Schema(description = "GAP 인증번호", example = "1001267")
+        String gapCertificationNumber,
+        
+        @Schema(description = "GAP 인증 기관명", example = "글로벌유농인")
+        String gapInstitutionName,
+        
+        @Schema(description = "GAP 인증 품목명", example = "토마토")
+        String gapProductName
 ) {} 

@@ -41,11 +41,17 @@ public record BrandingProjectResponse(
         @Schema(description = "로고 이미지 키워드", example = "[\"심플한\", \"모던한\", \"밝은\"]")
         List<String> logoImageKeywords,
         
-        @Schema(description = "GAP 인증번호", example = "GAP-2024-001")
+        @Schema(description = "GAP 인증번호", example = "1234567")
         String gapNumber,
         
         @Schema(description = "GAP 인증 여부", example = "true")
         Boolean isGapVerified,
+        
+        @Schema(description = "GAP 인증 기관명", example = "글로벌유농인")
+        String gapInstitutionName,
+        
+        @Schema(description = "GAP 인증 품목명", example = "토마토")
+        String gapProductName,
         
         @Schema(description = "생성된 브랜드명", example = "뽀사과")
         String generatedBrandName,
@@ -83,6 +89,8 @@ public record BrandingProjectResponse(
                 project.getLogoImageKeywords(),
                 project.getGapNumber(),
                 project.getIsGapVerified(),
+                project.getGapInstitutionName(),
+                project.getGapProductName(),
                 project.getGeneratedBrandName(),
                 project.getBrandConcept(),
                 project.getBrandStory(),

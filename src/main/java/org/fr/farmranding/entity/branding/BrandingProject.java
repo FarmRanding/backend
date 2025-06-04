@@ -64,6 +64,12 @@ public class BrandingProject extends BaseEntity {
     @Column(name = "is_gap_verified")
     private Boolean isGapVerified;
     
+    @Column(name = "gap_institution_name")
+    private String gapInstitutionName;
+    
+    @Column(name = "gap_product_name") 
+    private String gapProductName;
+    
     // 생성된 브랜드 정보
     @Column(name = "generated_brand_name")
     private String generatedBrandName;
@@ -109,6 +115,14 @@ public class BrandingProject extends BaseEntity {
     public void updateGapInfo(String gapNumber, Boolean isGapVerified) {
         this.gapNumber = gapNumber;
         this.isGapVerified = isGapVerified;
+    }
+    
+    public void updateGapInfo(String gapNumber, Boolean isGapVerified, 
+                             String gapInstitutionName, String gapProductName) {
+        this.gapNumber = gapNumber;
+        this.isGapVerified = isGapVerified;
+        this.gapInstitutionName = gapInstitutionName;
+        this.gapProductName = gapProductName;
     }
     
     public void updateBrandingKeywords(List<String> brandingKeywords) {

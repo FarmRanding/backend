@@ -64,6 +64,11 @@ public enum FarmrandingResponseCode {
     AI_PROMPT_TOO_LONG(HttpStatus.BAD_REQUEST, "FR444", "AI 프롬프트가 너무 깁니다"),
     AI_GENERATION_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "FR445", "AI 콘텐츠 생성에 실패했습니다"),
     
+    // GAP CERTIFICATION (FR450~)
+    GAP_INVALID_FORMAT(HttpStatus.BAD_REQUEST, "FR451", "GAP 인증번호 형식이 올바르지 않습니다. 7-15자리 숫자를 입력해 주세요."),
+    GAP_NOT_FOUND(HttpStatus.NOT_FOUND, "FR452", "GAP 인증번호를 찾을 수 없습니다. 인증번호를 다시 확인해 주세요."),
+    GAP_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "FR453", "GAP 인증 정보 조회 중 오류가 발생했습니다."),
+    
     // SERVER ERROR
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "FR500", "서버 내부 오류가 발생했습니다"),
     EXTERNAL_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "FR501", "외부 API 호출에 실패했습니다");
