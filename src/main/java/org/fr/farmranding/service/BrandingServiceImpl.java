@@ -849,43 +849,48 @@ public class BrandingServiceImpl implements BrandingService {
      * 홍보문구와 판매글 검증
      */
     private boolean validateConceptAndStory(String concept, String story, String brandName) {
-        // 홍보 문구 검증 (15-35자, 명사로 끝나야 함)
-        if (concept.length() < 15 || concept.length() > 35) {
-            log.warn("홍보 문구 길이 부적절: {}자 (15-35자 필수), 내용: [{}]", concept.length(), concept);
+        // 홍보 문구 검증 (10-40자로 완화, 기존 15-35자에서 범위 확대)
+        if (concept.length() < 10 || concept.length() > 40) {
+            log.warn("홍보 문구 길이 부적절: {}자 (10-40자 권장), 내용: [{}]", concept.length(), concept);
             return false;
         }
         
-        // 명사로 끝나는지 검증
-        if (!concept.matches(".*[가-힣]$") || concept.endsWith("다") || concept.endsWith("요") || 
+        // 명사로 끝나는지 검증 (조건 완화: 경고만 하고 통과)
+        if (concept.endsWith("다") || concept.endsWith("요") || 
             concept.endsWith("니다") || concept.endsWith("습니다")) {
-            log.warn("홍보 문구가 명사로 끝나지 않음: [{}]", concept);
-            return false;
+            log.warn("홍보 문구가 동사/형용사로 끝남: [{}] - 하지만 허용", concept);
+            // 경고만 하고 통과시킴
         }
         
-        // 판매 글 검증 (350-600자로 범위 확대)
-        if (story.length() < 350) {
-            log.warn("판매 글이 너무 짧습니다: {}자 (최소 350자 필요), 내용: [{}]", 
+        // 판매 글 검증 (300-800자로 범위 확대, 기존 350-600자에서 완화)
+        if (story.length() < 300) {
+            log.warn("판매 글이 너무 짧습니다: {}자 (최소 300자 권장), 내용: [{}]", 
                 story.length(), story.substring(0, Math.min(100, story.length())));
             return false;
         }
         
-        if (story.length() > 600) {
-            log.warn("판매 글이 너무 깁니다: {}자 (최대 600자 권장), 내용: [{}]", 
+        if (story.length() > 800) {
+            log.warn("판매 글이 너무 깁니다: {}자 (최대 800자 권장), 내용: [{}]", 
                 story.length(), story.substring(0, Math.min(100, story.length())));
             // 너무 길어도 허용 (경고만)
         }
         
-        // 브랜드명이 홍보 문구에 포함되어 있는지 체크 (포함되면 안 됨)
+        // 브랜드명이 홍보 문구에 포함되어 있는지 체크 (조건 완화: 경고만)
         if (concept.contains(brandName)) {
-            log.warn("홍보 문구에 브랜드명이 포함됨: [{}] contains [{}]", concept, brandName);
+            log.warn("홍보 문구에 브랜드명이 포함됨: [{}] contains [{}] - 하지만 허용", concept, brandName);
+            // 경고만 하고 통과시킴
+        }
+        
+        // 내용이 너무 단순한지 체크 (조건 완화)
+        if (concept.equals(story)) {
+            log.warn("홍보 문구와 판매 글이 동일함 - 실패");
             return false;
         }
         
-        // 내용이 너무 단순한지 체크
-        if (concept.equals(story) || concept.length() >= story.length()) {
-            log.warn("홍보 문구와 판매 글이 비정상적: conceptLen={}, storyLen={}", 
+        if (concept.length() >= story.length()) {
+            log.warn("홍보 문구가 판매 글보다 김: conceptLen={}, storyLen={} - 하지만 허용", 
                 concept.length(), story.length());
-            return false;
+            // 경고만 하고 통과시킴
         }
         
         log.info("홍보문구/판매글 검증 통과: 홍보문구={}자, 판매글={}자", concept.length(), story.length());
