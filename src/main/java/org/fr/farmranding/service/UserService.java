@@ -15,6 +15,11 @@ public interface UserService {
     UserResponse completeSignup(User currentUser, UserSignupRequest request);
     
     /**
+     * 현재 사용자 정보 조회
+     */
+    UserResponse getUserInfo(User currentUser);
+    
+    /**
      * 사용자 프로필 조회
      */
     UserProfileResponse getUserProfile(Long userId);

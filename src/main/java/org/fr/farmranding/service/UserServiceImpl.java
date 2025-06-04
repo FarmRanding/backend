@@ -36,6 +36,12 @@ public class UserServiceImpl implements UserService {
     
     @Override
     @Transactional(readOnly = true)
+    public UserResponse getUserInfo(User currentUser) {
+        return UserResponse.from(currentUser);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
     public UserProfileResponse getUserProfile(Long userId) {
         User user = findUserById(userId);
         return UserProfileResponse.from(user);

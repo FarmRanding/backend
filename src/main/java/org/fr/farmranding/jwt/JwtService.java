@@ -28,4 +28,9 @@ public interface JwtService {
      * 토큰 만료 여부 확인
      */
     boolean isTokenExpired(String token);
+    
+    /**
+     * Refresh Token으로 새 Access Token 발급
+     */
+    String refreshAccessToken(String refreshToken);
 } 

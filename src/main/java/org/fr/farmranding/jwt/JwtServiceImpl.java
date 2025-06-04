@@ -8,6 +8,7 @@ import org.fr.farmranding.common.code.FarmrandingResponseCode;
 import org.fr.farmranding.common.exception.BusinessException;
 import org.fr.farmranding.config.JwtProperties;
 import org.fr.farmranding.entity.user.User;
+import org.fr.farmranding.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -20,6 +21,7 @@ import java.util.Date;
 public class JwtServiceImpl implements JwtService {
     
     private final JwtProperties jwtProperties;
+    private final UserRepository userRepository;
     
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
@@ -80,6 +82,32 @@ public class JwtServiceImpl implements JwtService {
         } catch (Exception e) {
             log.debug("토큰 만료 확인 실패: {}", e.getMessage());
             return true;
+        }
+    }
+    
+    @Override
+    public String refreshAccessToken(String refreshToken) {
+        try {
+            // Refresh Token 유효성 검증
+            if (!isTokenValid(refreshToken)) {
+                throw new BusinessException(FarmrandingResponseCode.INVALID_TOKEN);
+            }
+            
+            // Refresh Token에서 사용자 ID 추출
+            Long userId = getUserIdFromToken(refreshToken);
+            
+            // 사용자 정보 조회
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new BusinessException(FarmrandingResponseCode.USER_NOT_FOUND));
+            
+            // 새로운 Access Token 생성
+            return generateAccessToken(user);
+            
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("토큰 갱신 실패: {}", e.getMessage());
+            throw new BusinessException(FarmrandingResponseCode.INVALID_TOKEN);
         }
     }
     
