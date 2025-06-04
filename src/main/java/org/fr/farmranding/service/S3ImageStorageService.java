@@ -37,17 +37,17 @@ public class S3ImageStorageService implements ImageStorageService {
     
     // 이미지 최적화 설정
     private static final int TARGET_SIZE = 512;
-    private static final String OUTPUT_FORMAT = "webp";
-    private static final String CONTENT_TYPE = "image/webp";
+    private static final String OUTPUT_FORMAT = "jpeg";
+    private static final String CONTENT_TYPE = "image/jpeg";
     
     @Override
     public String saveImage(byte[] imageBytes, String brandName) {
         try {
-            // 이미지 최적화 (리사이징 + WebP 변환)
+            // 이미지 리사이징 (512x512 JPEG)
             byte[] optimizedImageBytes = optimizeImage(imageBytes);
             
-            // 고유한 파일명 생성 (WebP 확장자)
-            String fileName = String.format("brand-images/brand_%s_%s.webp", 
+            // 고유한 파일명 생성 (JPEG 확장자)
+            String fileName = String.format("brand-images/brand_%s_%s.jpg", 
                 brandName.replaceAll("[^a-zA-Z0-9가-힣]", "_"), 
                 UUID.randomUUID().toString().substring(0, 8));
             
@@ -64,7 +64,7 @@ public class S3ImageStorageService implements ImageStorageService {
             String imageUrl = String.format("https://%s.s3.%s.amazonaws.com/%s", 
                 bucketName, region, fileName);
             
-            log.info("S3 최적화 이미지 업로드 완료: bucket={}, key={}, size={}KB, url={}", 
+            log.info("S3 최적화 이미지 업로드 완료: bucket={}, key={}, size={}KB, format=JPEG, url={}", 
                 bucketName, fileName, optimizedImageBytes.length / 1024, imageUrl);
             return imageUrl;
             
@@ -75,7 +75,7 @@ public class S3ImageStorageService implements ImageStorageService {
     }
     
     /**
-     * 이미지 최적화: 512x512 리사이징 + WebP 변환
+     * 이미지 최적화: 512x512 리사이징 + JPEG 변환
      */
     private byte[] optimizeImage(byte[] originalImageBytes) throws IOException {
         long startTime = System.currentTimeMillis();
@@ -89,18 +89,18 @@ public class S3ImageStorageService implements ImageStorageService {
         // 512x512로 리사이징
         BufferedImage resizedImage = resizeImage(originalImage, TARGET_SIZE, TARGET_SIZE);
         
-        // WebP 포맷으로 변환
+        // JPEG 포맷으로 변환
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         boolean written = ImageIO.write(resizedImage, OUTPUT_FORMAT, outputStream);
         
         if (!written) {
-            throw new RuntimeException("WebP 변환에 실패했습니다. webp-imageio 라이브러리가 제대로 로드되지 않았을 수 있습니다.");
+            throw new RuntimeException("JPEG 변환에 실패했습니다.");
         }
         
         byte[] optimizedBytes = outputStream.toByteArray();
         
         long processingTime = System.currentTimeMillis() - startTime;
-        log.info("이미지 최적화 완료: 원본={}KB, 최적화={}KB, 압축률={:.1f}%, 처리시간={}ms", 
+        log.info("이미지 리사이징 완료: 원본={}KB, JPEG={}KB, 압축률={:.1f}%, 처리시간={}ms", 
             originalImageBytes.length / 1024, 
             optimizedBytes.length / 1024,
             (1 - (double) optimizedBytes.length / originalImageBytes.length) * 100,
