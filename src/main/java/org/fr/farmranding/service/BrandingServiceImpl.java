@@ -48,7 +48,12 @@ public class BrandingServiceImpl implements BrandingService {
         "3. 작물이 가지는 매력을 분석합니다. 작물이 가지는 독특한 장점을 중점적으로 고려합니다.\n" +
         "\n" +
         "# Output Format\n" +
-        "**⚠️ 중요: 브랜드명만 출력하세요. 다른 설명이나 문장은 절대 포함하지 마세요.**\n" +
+        "**🚨 중요: 브랜드명만 출력하세요. 마크다운, 설명, 문장, 특수문자는 절대 포함하지 마세요.**\n" +
+        "\n" +
+        "출력 예시:\n" +
+        "아삭체리탑\n" +
+        "신선토마토\n" +
+        "자연방울\n" +
         "\n" +
         "- **브랜드명:** 짧고 기억에 남는 형태로, 2개의 단어 내외로 구성합니다.\n" +
         "- 브랜드명은 사용자가 제공한 작물명, 품종, 브랜드 이미지, 작물의 매력 요소를 분석하여 생성합니다.\n" +
@@ -59,57 +64,63 @@ public class BrandingServiceImpl implements BrandingService {
         "    - 작물명 및 품종: 토마토, 체리\n" +
         "    - 브랜드 이미지: 신선하고 건강한 느낌\n" +
         "    - 작물의 매력: 고당도의 맛과 아삭한 식감\n" +
-        "- 생성된 브랜드명:\n" +
-        "    - \"아삭체리탑\"\n" +
+        "- 출력:\n" +
+        "    - 아삭체리탑\n" +
         "\n" +
         "# Notes\n" +
         "- 브랜드명 생성 시 농가 위치나 다른 배경 정보를 활용하여 신선하고 참신한 느낌을 주도록 고려합니다.\n" +
         "- 브랜드명이 직관적이고 긍정적인 인상을 줄 수 있도록 하여야 합니다.\n" +
         "- 각 단계에서 얻은 정보를 충실히 반영해주세요.\n" +
-        "- **응답은 반드시 브랜드명만 포함하세요.**";
+        "- **응답은 브랜드명만 한 줄로 출력하세요. 다른 텍스트, 마크다운, 특수문자는 포함하지 마세요.**";
 
     private static final String CONCEPT_AND_STORY_PROMPT_TEMPLATE =
-        "사용자로부터 정보를 수집하여 해당 작물의 홍보 문구와 판매글을 작성하세요. 목표는 작물의 고유한 브랜드 아이덴티티를 만드는 것입니다.\n" +
+        "작물의 홍보 문구와 판매글을 JSON 형식으로 생성해주세요.\n" +
         "\n" +
         "## 📋 작성 요구사항\n" +
         "\n" +
-        "### 홍보 문구 작성 규칙:\n" +
-        "- **길이**: 15자 이상 40자 이하 (필수)\n" +
+        "### 홍보 문구 (concept) 규칙:\n" +
+        "- **길이**: 정확히 15자 이상 35자 이하 (필수)\n" +
         "- **형식**: 한 줄의 매력적인 문구\n" +
-        "- **필수 조건**: 반드시 명사로 끝나야 함\n" +
-        "- **내용**: 작물의 특성을 강조하되 브랜드명은 포함하지 않음\n" +
-        "- **데이터 활용**: 작물명, 품종, 재배 방식, 등급, 농가 위치, 브랜드 이미지, 작물 매력\n" +
+        "- **필수 조건**: 반드시 명사로 끝나야 함 (예: '맛', '토마토', '감동', '선택')\n" +
+        "- **내용**: 작물의 특성을 강조하되 브랜드명은 절대 포함하지 않음\n" +
+        "- **예시**: \"자연이 키운 달콤한 토마토\", \"햇살 머금은 신선한 맛\"\n" +
         "\n" +
-        "### 판매글 작성 규칙:\n" +
-        "- **길이**: 400자 이상 600자 이하 (필수)\n" +
+        "### 판매글 (story) 규칙:\n" +
+        "- **길이**: 최소 350자 이상 작성 (400-600자 권장)\n" +
         "- **구성**: 농장 소개 → 재배 과정 → 품질/맛 → 구매 유도\n" +
-        "- **포함 요소**: 제공된 모든 정보를 의미있게 연결한 스토리\n" +
-        "- **데이터 활용**: 작물명, 품종, 재배 방식, 등급, 농가 위치, 농가명, GAP 인증(선택), 브랜드 이미지, 작물 매력\n" +
+        "- **포함 요소**: 제공된 모든 정보를 의미있게 연결한 상세한 스토리\n" +
+        "- **어조**: 구체적이고 신뢰감 있는 설명\n" +
+        "- **중요**: 반드시 350자 이상으로 충분히 길게 작성해주세요\n" +
         "\n" +
-        "# Steps\n" +
-        "1. 사용자로부터 제공받은 정보를 분석합니다.\n" +
-        "2. 정보를 바탕으로 작물의 특성과 매력을 분석하고, 브랜드 이미지에 맞는 포인트를 정리합니다.\n" +
-        "3. 홍보 문구와 판매글 각각의 요구사항에 따라 작성합니다.\n" +
+        "## 💡 길이 확인 중요 안내\n" +
+        "- **홍보문구**: 15-35자 범위에서 정확히 작성\n" +
+        "- **판매글**: 최소 350자 이상, 가능하면 400-600자로 상세하게 작성\n" +
+        "- **판매글 길이 체크**: 반드시 350자 이상인지 확인 후 제출\n" +
+        "- 판매글이 너무 짧으면 농장 스토리, 재배 과정, 품질 설명을 더 추가하세요\n" +
         "\n" +
-        "# Examples\n" +
-        "- **입력 정보**\n" +
-        "    - 작물명: 사과, 품종: 후지, 재배 방식: 유기농, 등급: 프리미엄, 농가 위치: 경남 양산, 브랜드 이미지: 고급, 작물 매력: 신선하고 달콤한 맛\n" +
-        "- **홍보 문구 예시**\n" +
-        "    - \"자연이 품은 달콤함, 신선함을 경험하세요\"\n" +
-        "- **판매글 예시**\n" +
-        "    - \"경남 양산의 선도농장에서 유기농으로 재배된 프리미엄 후지 사과. 신선하고 달콤한 맛이 특징이며, 자연 그대로의 고급스러움을 선사합니다. 지금 바로 저희 농장의 특별한 사과를 만나보세요.\"\n" +
+        "## ⚠️ 필수 출력 형식 (JSON)\n" +
+        "```json\n" +
+        "{\n" +
+        "  \"concept\": \"15-35자 이내, 명사로 끝나는 홍보 문구\",\n" +
+        "  \"story\": \"최소 350자 이상의 상세한 판매 글\"\n" +
+        "}\n" +
+        "```\n" +
         "\n" +
-        "## ⚠️ 필수 출력 형식 (정확히 준수하세요)\n" +
-        "**아래 형식을 절대 변경하지 마세요. 콜론(:) 위치와 줄바꿈을 정확히 지켜주세요.**\n" +
+        "## 📝 성공 예시 (길이 참고용)\n" +
+        "```json\n" +
+        "{\n" +
+        "  \"concept\": \"햇살 가득 머금은 달콤한 체리토마토\",\n" +
+        "  \"story\": \"경기도 화성시의 청정 자연 속에서 자란 체리토마토를 소개합니다. 저희 농장은 20년간 이어온 전통적인 농법과 현대적인 재배 기술을 조화시켜 최고 품질의 토마토를 생산하고 있습니다. 매일 새벽 이슬을 머금고 자라는 체리토마토는 당도가 높고 식감이 뛰어나며, 자연의 단맛이 입안 가득 퍼집니다. 우리 농장의 토마토는 유기농 재배 방식으로 길러져 안전하고 건강하며, 아이들도 안심하고 드실 수 있습니다. 특히 우리가 자랑하는 재배 기술로 인해 일반 토마토보다 당도가 2-3배 높으며, 씹는 순간 터지는 과즙이 일품입니다. 농장에서 직접 수확하여 신선도를 보장하며, 엄격한 품질 관리를 통해 최상의 토마토만을 선별합니다. 신선함과 맛을 동시에 만족시키는 저희 체리토마토로 건강한 식탁을 완성해보세요.\"\n" +
+        "}\n" +
+        "```\n" +
+        "**위 예시의 판매글은 약 450자입니다. 이 정도 길이로 작성해주세요.**\n" +
         "\n" +
-        "홍보 문구: [15-40자 이내, 명사로 끝나는 홍보 문구]\n" +
-        "판매 글: [400-600자 이내의 상세한 판매 글]\n" +
-        "\n" +
-        "# Notes\n" +
-        "- 홍보 문구는 반드시 명사로 끝나야 합니다.\n" +
-        "- 브랜드 이미지와 매력 포인트가 홍보 문구 및 판매글에 잘 녹아들어야 합니다.\n" +
-        "- 사용자 요구 사항에 맞는 내용 구성을 최우선으로 생각하세요.\n" +
-        "- **출력 형식을 절대 변경하지 마세요.**";
+        "## 🚨 중요 주의사항\n" +
+        "- JSON 형식을 정확히 지켜주세요\n" +
+        "- 응답에는 JSON만 포함하고 다른 설명은 포함하지 마세요\n" +
+        "- 따옴표와 중괄호를 정확히 사용해주세요\n" +
+        "- **판매글은 반드시 350자 이상으로 충분히 길게 작성해주세요**\n" +
+        "- 판매글이 짧다면 농장 위치, 재배 방법, 맛의 특징, 보관법, 활용법 등을 더 추가하세요";
 
     private static final String LOGO_PROMPT_TEMPLATE =
         "Create a professional agricultural logo design based on the following specifications:\n" +
@@ -267,8 +278,8 @@ public class BrandingServiceImpl implements BrandingService {
                 ChatResponse response = chatModel.call(
                     new Prompt(brandNamePrompt, OpenAiChatOptions.builder()
                         .model("gpt-4o-mini")
-                        .maxTokens(30) // 브랜드명은 짧으므로 토큰 수 줄임
-                        .temperature(0.7)
+                        .maxTokens(20) // 브랜드명은 매우 짧으므로 토큰 수 더 줄임
+                        .temperature(0.8) // 창의성 높이기
                         .build())
                 );
                 
@@ -309,9 +320,32 @@ public class BrandingServiceImpl implements BrandingService {
         
         brandName = brandName.trim();
         
+        // 마크다운 형식 제거 (- **브랜드명:** 형태)
+        brandName = brandName.replaceAll("^\\s*-\\s*\\*\\*브랜드명\\*\\*\\s*:\\s*", "");
+        brandName = brandName.replaceAll("^\\s*-\\s*브랜드명\\s*:\\s*", "");
+        brandName = brandName.replaceAll("^\\s*\\*\\*브랜드명\\*\\*\\s*:\\s*", "");
+        brandName = brandName.replaceAll("^\\s*브랜드명\\s*:\\s*", "");
+        
         // 불필요한 인용부호 제거
         if (brandName.startsWith("\"") && brandName.endsWith("\"")) {
             brandName = brandName.substring(1, brandName.length() - 1).trim();
+        }
+        if (brandName.startsWith("'") && brandName.endsWith("'")) {
+            brandName = brandName.substring(1, brandName.length() - 1).trim();
+        }
+        
+        // 마크다운 볼드 제거 (**텍스트**)
+        brandName = brandName.replaceAll("\\*\\*([^*]+)\\*\\*", "$1");
+        
+        // 앞뒤 특수문자 제거
+        brandName = brandName.replaceAll("^[\\-\\*\\s:\"']+", "");
+        brandName = brandName.replaceAll("[\\-\\*\\s:\"']+$", "");
+        
+        brandName = brandName.trim();
+        
+        if (brandName.isEmpty()) {
+            log.warn("브랜드명 정리 후 비어있음");
+            return null;
         }
         
         // 길이 검증 (2-20자)
@@ -327,7 +361,7 @@ public class BrandingServiceImpl implements BrandingService {
             return null;
         }
         
-        // 특수문자 체크 (기본적인 한글, 영문, 숫자만 허용)
+        // 특수문자 체크 (기본적인 한글, 영문, 숫자만 허용) - 더 관대하게
         if (!brandName.matches("^[가-힣a-zA-Z0-9\\s]+$")) {
             log.warn("브랜드명에 허용되지 않는 문자 포함: [{}]", brandName);
             return null;
@@ -362,6 +396,10 @@ public class BrandingServiceImpl implements BrandingService {
 
         // 홍보 문구/스토리 프롬프트 생성
         String conceptAndStoryPrompt = String.format(
+            "**🚨 중요 길이 요구사항 🚨**\n" +
+            "- 홍보 문구(concept): 15-35자\n" +
+            "- 판매글(story): 최소 350자 이상 (400-500자 권장)\n" +
+            "**판매글이 300자 미만이면 절대 안됩니다. 반드시 350자 이상으로 작성하세요.**\n\n" +
             "작물명: %s\n품종: %s\n재배방식: %s\n등급: %s\n농가위치: %s\n브랜드명: %s\nGAP인증번호: %s\n브랜드이미지키워드: %s\n작물매력키워드: %s\n\n%s",
             cropName, variety, cultivationMethod, grade, location, brandName, gapNumber, brandImageKeywords, cropAppealKeywords,
             CONCEPT_AND_STORY_PROMPT_TEMPLATE
@@ -529,6 +567,10 @@ public class BrandingServiceImpl implements BrandingService {
 
         // 홍보 문구/스토리 프롬프트 생성
         String conceptAndStoryPrompt = String.format(
+            "**🚨 중요 길이 요구사항 🚨**\n" +
+            "- 홍보 문구(concept): 15-35자\n" +
+            "- 판매글(story): 최소 350자 이상 (400-500자 권장)\n" +
+            "**판매글이 300자 미만이면 절대 안됩니다. 반드시 350자 이상으로 작성하세요.**\n\n" +
             "작물명: %s\n품종: %s\n재배방식: %s\n등급: %s\n농가위치: %s\n브랜드명: %s\nGAP인증번호: %s\n브랜드이미지키워드: %s\n작물매력키워드: %s\n\n%s",
             cropName, variety, cultivationMethod, grade, location, brandName, gapNumber, brandImageKeywords, cropAppealKeywords,
             CONCEPT_AND_STORY_PROMPT_TEMPLATE
@@ -675,7 +717,7 @@ public class BrandingServiceImpl implements BrandingService {
     }
     
     /**
-     * 홍보 문구/스토리 생성 (재시도 로직 포함)
+     * 홍보 문구/스토리 생성 (재시도 로직 포함) - JSON 방식
      */
     private String[] generateConceptAndStoryWithRetry(String prompt, String brandName, int maxRetries) {
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
@@ -685,22 +727,22 @@ public class BrandingServiceImpl implements BrandingService {
                 ChatResponse conceptResponse = chatModel.call(
                     new Prompt(prompt, OpenAiChatOptions.builder()
                         .model("gpt-4o-mini")
-                        .maxTokens(1000)
-                        .temperature(0.7) // 일관성을 위해 온도 조금 낮춤
+                        .maxTokens(1500) // 더 긴 응답을 위해 토큰 수 증가
+                        .temperature(0.7) // 창의성을 위해 온도 조정
                         .build())
                 );
                 
                 String fullResponse = conceptResponse.getResult().getOutput().getText().trim();
-                log.debug("GPT 응답 (시도 {}): {}", attempt, fullResponse);
+                log.debug("GPT JSON 응답 (시도 {}): {}", attempt, fullResponse);
                 
-                // 응답 검증 및 파싱
-                String[] result = parseAndValidateResponse(fullResponse, brandName);
+                // JSON 응답 검증 및 파싱
+                String[] result = parseJsonResponse(fullResponse, brandName);
                 if (result != null) {
                     log.info("홍보 문구/스토리 생성 성공 (시도 {}): brandName={}", attempt, brandName);
                     return result;
                 }
                 
-                log.warn("응답 형식이 올바르지 않음 (시도 {}): brandName={}", attempt, brandName);
+                log.warn("JSON 응답 형식이 올바르지 않음 (시도 {}): brandName={}", attempt, brandName);
                 
             } catch (Exception e) {
                 log.error("홍보 문구/스토리 생성 실패 (시도 {}): brandName={}, error={}", 
@@ -720,77 +762,134 @@ public class BrandingServiceImpl implements BrandingService {
     }
     
     /**
-     * GPT 응답 파싱 및 검증 (개선된 검증 로직)
+     * JSON 응답 파싱 및 검증
      */
-    private String[] parseAndValidateResponse(String fullResponse, String brandName) {
+    private String[] parseJsonResponse(String jsonResponse, String brandName) {
         try {
-            log.debug("응답 파싱 시작: {}", fullResponse.substring(0, Math.min(200, fullResponse.length())));
-            
-            // 정규식을 이용한 강력한 파싱 (개선된 버전)
-            java.util.regex.Pattern conceptPattern = java.util.regex.Pattern.compile(
-                "홍보\\s*문구\\s*[:：]\\s*(.+?)(?=\\n|판매|$)", 
-                java.util.regex.Pattern.DOTALL
-            );
-            java.util.regex.Pattern storyPattern = java.util.regex.Pattern.compile(
-                "판매\\s*글\\s*[:：]\\s*(.+?)$", 
-                java.util.regex.Pattern.DOTALL
-            );
-            
-            java.util.regex.Matcher conceptMatcher = conceptPattern.matcher(fullResponse);
-            java.util.regex.Matcher storyMatcher = storyPattern.matcher(fullResponse);
-            
-            if (conceptMatcher.find() && storyMatcher.find()) {
-                String concept = conceptMatcher.group(1).trim();
-                String story = storyMatcher.group(1).trim();
-                
-                // 홍보 문구 검증 (15-40자, 명사로 끝나야 함)
-                if (concept.length() < 15 || concept.length() > 40) {
-                    log.warn("홍보 문구 길이 부적절: {}자 (15-40자 필수), 내용: [{}]", concept.length(), concept);
-                    return null;
+            // JSON 블록 추출 (```json ... ``` 형태일 수도 있음)
+            String cleanJson = jsonResponse;
+            if (jsonResponse.contains("```json")) {
+                int start = jsonResponse.indexOf("```json") + 7;
+                int end = jsonResponse.lastIndexOf("```");
+                if (start > 6 && end > start) {
+                    cleanJson = jsonResponse.substring(start, end).trim();
                 }
-                
-                // 명사로 끝나는지 검증 (한국어 특성상 간단한 패턴 체크)
-                if (!concept.matches(".*[가-힣]$") || concept.endsWith("다") || concept.endsWith("요") || 
-                    concept.endsWith("니다") || concept.endsWith("습니다")) {
-                    log.warn("홍보 문구가 명사로 끝나지 않음: [{}]", concept);
-                    return null;
+            } else if (jsonResponse.contains("```")) {
+                int start = jsonResponse.indexOf("```") + 3;
+                int end = jsonResponse.lastIndexOf("```");
+                if (start > 2 && end > start) {
+                    cleanJson = jsonResponse.substring(start, end).trim();
                 }
-                
-                // 판매 글 검증 (400-600자)
-                if (story.length() < 400 || story.length() > 600) {
-                    log.warn("판매 글 길이 부적절: {}자 (400-600자 필수), 내용: [{}]", 
-                        story.length(), story.substring(0, Math.min(100, story.length())));
-                    return null;
-                }
-                
-                // 내용 검증 (홍보 문구와 판매 글이 적절히 다른지)
-                if (concept.equals(story) || concept.length() >= story.length()) {
-                    log.warn("홍보 문구와 판매 글이 비정상적: conceptLen={}, storyLen={}", 
-                        concept.length(), story.length());
-                    return null;
-                }
-                
-                // 브랜드명이 홍보 문구에 포함되어 있는지 체크 (포함되면 안 됨)
-                if (concept.contains(brandName)) {
-                    log.warn("홍보 문구에 브랜드명이 포함됨: [{}] contains [{}]", concept, brandName);
-                    return null;
-                }
-                
-                log.info("응답 파싱 및 검증 성공: 홍보문구={}자, 판매글={}자", concept.length(), story.length());
-                log.debug("홍보문구: [{}]", concept);
-                log.debug("판매글: [{}]", story.substring(0, Math.min(100, story.length())) + "...");
-                
-                return new String[]{concept, story};
             }
             
-            log.warn("정규식 매칭 실패 - 출력 형식이 올바르지 않음");
-            log.debug("실패한 응답 내용: {}", fullResponse);
-            return null;
+            // JSON 시작과 끝 찾기
+            int jsonStart = cleanJson.indexOf("{");
+            int jsonEnd = cleanJson.lastIndexOf("}");
+            
+            if (jsonStart == -1 || jsonEnd == -1 || jsonStart >= jsonEnd) {
+                log.warn("JSON 구조를 찾을 수 없음: {}", cleanJson.substring(0, Math.min(100, cleanJson.length())));
+                return null;
+            }
+            
+            cleanJson = cleanJson.substring(jsonStart, jsonEnd + 1);
+            log.debug("정제된 JSON: {}", cleanJson);
+            
+            // 간단한 JSON 파싱 (Jackson 없이)
+            String concept = extractJsonValue(cleanJson, "concept");
+            String story = extractJsonValue(cleanJson, "story");
+            
+            if (concept == null || story == null) {
+                log.warn("JSON 파싱 실패: concept={}, story={}", concept != null, story != null);
+                return null;
+            }
+            
+            // 검증
+            if (!validateConceptAndStory(concept, story, brandName)) {
+                return null;
+            }
+            
+            log.info("JSON 응답 파싱 및 검증 성공: 홍보문구={}자, 판매글={}자", concept.length(), story.length());
+            log.debug("홍보문구: [{}]", concept);
+            log.debug("판매글: [{}]", story.substring(0, Math.min(100, story.length())) + "...");
+            
+            return new String[]{concept, story};
             
         } catch (Exception e) {
-            log.error("응답 파싱 중 오류: {}", e.getMessage());
+            log.error("JSON 응답 파싱 중 오류: {}", e.getMessage());
             return null;
         }
+    }
+    
+    /**
+     * 간단한 JSON 값 추출
+     */
+    private String extractJsonValue(String json, String key) {
+        try {
+            String pattern = "\"" + key + "\"\\s*:\\s*\"([^\"]*(?:\\\\.[^\"]*)*)\"";
+            java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern, java.util.regex.Pattern.DOTALL);
+            java.util.regex.Matcher m = p.matcher(json);
+            
+            if (m.find()) {
+                String value = m.group(1);
+                // 이스케이프 문자 처리
+                value = value.replace("\\\"", "\"")
+                           .replace("\\n", "\n")
+                           .replace("\\t", "\t")
+                           .replace("\\\\", "\\");
+                return value.trim();
+            }
+            return null;
+        } catch (Exception e) {
+            log.error("JSON 값 추출 실패: key={}, error={}", key, e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * 홍보문구와 판매글 검증
+     */
+    private boolean validateConceptAndStory(String concept, String story, String brandName) {
+        // 홍보 문구 검증 (15-35자, 명사로 끝나야 함)
+        if (concept.length() < 15 || concept.length() > 35) {
+            log.warn("홍보 문구 길이 부적절: {}자 (15-35자 필수), 내용: [{}]", concept.length(), concept);
+            return false;
+        }
+        
+        // 명사로 끝나는지 검증
+        if (!concept.matches(".*[가-힣]$") || concept.endsWith("다") || concept.endsWith("요") || 
+            concept.endsWith("니다") || concept.endsWith("습니다")) {
+            log.warn("홍보 문구가 명사로 끝나지 않음: [{}]", concept);
+            return false;
+        }
+        
+        // 판매 글 검증 (350-600자로 범위 확대)
+        if (story.length() < 350) {
+            log.warn("판매 글이 너무 짧습니다: {}자 (최소 350자 필요), 내용: [{}]", 
+                story.length(), story.substring(0, Math.min(100, story.length())));
+            return false;
+        }
+        
+        if (story.length() > 600) {
+            log.warn("판매 글이 너무 깁니다: {}자 (최대 600자 권장), 내용: [{}]", 
+                story.length(), story.substring(0, Math.min(100, story.length())));
+            // 너무 길어도 허용 (경고만)
+        }
+        
+        // 브랜드명이 홍보 문구에 포함되어 있는지 체크 (포함되면 안 됨)
+        if (concept.contains(brandName)) {
+            log.warn("홍보 문구에 브랜드명이 포함됨: [{}] contains [{}]", concept, brandName);
+            return false;
+        }
+        
+        // 내용이 너무 단순한지 체크
+        if (concept.equals(story) || concept.length() >= story.length()) {
+            log.warn("홍보 문구와 판매 글이 비정상적: conceptLen={}, storyLen={}", 
+                concept.length(), story.length());
+            return false;
+        }
+        
+        log.info("홍보문구/판매글 검증 통과: 홍보문구={}자, 판매글={}자", concept.length(), story.length());
+        return true;
     }
     
     /**
