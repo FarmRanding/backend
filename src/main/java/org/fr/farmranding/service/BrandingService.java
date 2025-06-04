@@ -50,4 +50,10 @@ public interface BrandingService {
      */
     BrandingProjectResponse createBrandingProjectWithAi(org.fr.farmranding.dto.branding.BrandingProjectCreateRequest request, org.fr.farmranding.entity.user.User currentUser, String brandName, String promptForLogo, String promptForConcept, String promptForStory);
 
+    /**
+     * 🚀 점진적 브랜딩 생성 (텍스트 먼저 반환, 이미지는 백그라운드 처리)
+     * 텍스트(홍보 문구/스토리)는 5초 내 즉시 반환하고, 이미지는 백그라운드에서 처리하여 나중에 업데이트
+     */
+    BrandingProjectResponse createBrandingProjectProgressive(BrandingProjectCreateRequest request, User currentUser, String brandName);
+
 }

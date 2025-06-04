@@ -19,6 +19,8 @@ import org.fr.farmranding.service.BrandingService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -29,6 +31,7 @@ import java.util.List;
 public class BrandingController {
     
     private final BrandingService brandingService;
+    private static final Logger log = LoggerFactory.getLogger(BrandingController.class);
 
     @Operation(summary = "브랜딩 프로젝트 생성", 
                description = "작물정보, GAP인증여부, 키워드를 입력받아 GPT로 브랜딩을 완료하고 프로젝트를 생성합니다.")
@@ -144,6 +147,36 @@ public class BrandingController {
             @RequestParam(name = "promptForStory", required = false) String promptForStory
     ) {
         BrandingProjectResponse response = brandingService.createBrandingProjectWithAi(request, currentUser, brandName, promptForLogo, promptForConcept, promptForStory);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(FarmrandingResponseBody.success(response));
+    }
+
+    @Operation(summary = "🚀 점진적 AI 브랜딩 생성 (텍스트 먼저)", 
+               description = "텍스트(홍보 문구/스토리)는 5초 내 즉시 반환하고, 이미지는 백그라운드에서 처리합니다. " +
+                           "응답 받은 후 같은 프로젝트 ID로 조회하여 이미지 생성 상태를 확인할 수 있습니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "점진적 브랜딩 생성 성공 (텍스트 즉시 반환)"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+        @ApiResponse(responseCode = "401", description = "인증 실패"),
+        @ApiResponse(responseCode = "403", description = "사용량 한도 초과")
+    })
+    @PostMapping("/ai/progressive")
+    public ResponseEntity<FarmrandingResponseBody<BrandingProjectResponse>> createBrandingProjectProgressive(
+            @CurrentUser User currentUser,
+            @Valid @RequestBody BrandingProjectCreateRequest request,
+            @RequestParam(name = "brandName") String brandName) {
+        
+        log.info("점진적 브랜딩 API 호출 - 사용자: {}, 브랜드명: {}", currentUser.getEmail(), brandName);
+        log.info("요청 데이터 확인:");
+        log.info("- title: {}", request.title());
+        log.info("- cropName: {}", request.cropName());
+        log.info("- variety: {}", request.variety());
+        log.info("- brandingKeywords: {}", request.brandingKeywords());
+        log.info("- cropAppealKeywords: {}", request.cropAppealKeywords());
+        log.info("- logoImageKeywords: {}", request.logoImageKeywords());
+        log.info("- hasGapCertification: {}", request.hasGapCertification());
+        
+        BrandingProjectResponse response = brandingService.createBrandingProjectProgressive(request, currentUser, brandName);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(FarmrandingResponseBody.success(response));
     }

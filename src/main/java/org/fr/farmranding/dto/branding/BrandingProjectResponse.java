@@ -3,6 +3,7 @@ package org.fr.farmranding.dto.branding;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.fr.farmranding.entity.branding.BrandingProject;
 import org.fr.farmranding.entity.branding.Grade;
+import org.fr.farmranding.entity.branding.ImageGenerationStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -58,6 +59,10 @@ public record BrandingProjectResponse(
         @Schema(description = "브랜드 이미지 URL", example = "https://storage.farmranding.com/brands/12345.png")
         String brandImageUrl,
         
+        @Schema(description = "이미지 생성 상태", example = "COMPLETED", 
+               allowableValues = {"PENDING", "PROCESSING", "COMPLETED", "FAILED"})
+        ImageGenerationStatus imageGenerationStatus,
+        
         @Schema(description = "생성일시", example = "2024-01-15T10:30:00")
         LocalDateTime createdAt,
         
@@ -82,6 +87,7 @@ public record BrandingProjectResponse(
                 project.getBrandConcept(),
                 project.getBrandStory(),
                 project.getBrandImageUrl(),
+                project.getImageGenerationStatus(),
                 project.getCreatedAt(),
                 project.getUpdatedAt()
         );

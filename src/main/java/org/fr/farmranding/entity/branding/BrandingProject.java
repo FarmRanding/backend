@@ -77,6 +77,11 @@ public class BrandingProject extends BaseEntity {
     @Column(name = "brand_image_url")
     private String brandImageUrl;
     
+    // 이미지 생성 상태 (PENDING, PROCESSING, COMPLETED, FAILED)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "image_generation_status")
+    private ImageGenerationStatus imageGenerationStatus;
+    
     // 비즈니스 메서드
     public void updateBasicInfo(String title, String cropName, String variety, 
                                String cultivationMethod, Grade grade) {
@@ -102,6 +107,28 @@ public class BrandingProject extends BaseEntity {
     
     public void updateLogoImageKeywords(List<String> logoImageKeywords) {
         this.logoImageKeywords = logoImageKeywords;
+    }
+    
+    /**
+     * 이미지 생성 상태 업데이트
+     */
+    public void updateImageGenerationStatus(ImageGenerationStatus status) {
+        this.imageGenerationStatus = status;
+    }
+    
+    /**
+     * 이미지 생성 완료 시 호출
+     */
+    public void completeImageGeneration(String imageUrl) {
+        this.brandImageUrl = imageUrl;
+        this.imageGenerationStatus = ImageGenerationStatus.COMPLETED;
+    }
+    
+    /**
+     * 이미지 생성 실패 시 호출
+     */
+    public void failImageGeneration() {
+        this.imageGenerationStatus = ImageGenerationStatus.FAILED;
     }
     
     public void completeBranding(String generatedBrandName, String promotionText, 
