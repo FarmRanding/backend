@@ -89,6 +89,7 @@ public class BrandingServiceImpl implements BrandingService {
         "- **길이**: 최소 350자 이상 작성 (400-600자 권장)\n" +
         "- **구성**: 농장 소개 → 재배 과정 → 품질/맛 → 구매 유도\n" +
         "- **포함 요소**: 제공된 모든 정보를 의미있게 연결한 상세한 스토리\n" +
+        "- **농가명 활용**: 농가명이 제공된 경우 판매글에 자연스럽게 포함시켜 브랜드 신뢰성 향상\n" +
         "- **어조**: 구체적이고 신뢰감 있는 설명\n" +
         "- **중요**: 반드시 350자 이상으로 충분히 길게 작성해주세요\n" +
         "\n" +
@@ -98,29 +99,27 @@ public class BrandingServiceImpl implements BrandingService {
         "- **판매글 길이 체크**: 반드시 350자 이상인지 확인 후 제출\n" +
         "- 판매글이 너무 짧으면 농장 스토리, 재배 과정, 품질 설명을 더 추가하세요\n" +
         "\n" +
+        "## 🏪 농가명 활용 가이드\n" +
+        "- **농가명이 제공된 경우**: 판매글에 농가명을 자연스럽게 포함하여 신뢰성과 브랜드 인지도 향상\n" +
+        "- **농가명이 없는 경우**: 일반적인 농장 표현 사용 (예: '저희 농장', '우리 농장')\n" +
+        "- **사용 예시**: '[농가명]에서 정성스럽게 키운...', '[농가명]의 전통 농법으로...'\n" +
+        "\n" +
         "## ⚠️ 필수 출력 형식 (JSON)\n" +
         "```json\n" +
         "{\n" +
         "  \"concept\": \"15-35자 이내, 명사로 끝나는 홍보 문구\",\n" +
-        "  \"story\": \"최소 350자 이상의 상세한 판매 글\"\n" +
+        "  \"story\": \"최소 350자 이상의 상세한 판매 글 (농가명이 있다면 포함)\"\n" +
         "}\n" +
         "```\n" +
         "\n" +
-        "## 📝 성공 예시 (길이 참고용)\n" +
-        "```json\n" +
-        "{\n" +
-        "  \"concept\": \"햇살 가득 머금은 달콤한 체리토마토\",\n" +
-        "  \"story\": \"경기도 화성시의 청정 자연 속에서 자란 체리토마토를 소개합니다. 저희 농장은 20년간 이어온 전통적인 농법과 현대적인 재배 기술을 조화시켜 최고 품질의 토마토를 생산하고 있습니다. 매일 새벽 이슬을 머금고 자라는 체리토마토는 당도가 높고 식감이 뛰어나며, 자연의 단맛이 입안 가득 퍼집니다. 우리 농장의 토마토는 유기농 재배 방식으로 길러져 안전하고 건강하며, 아이들도 안심하고 드실 수 있습니다. 특히 우리가 자랑하는 재배 기술로 인해 일반 토마토보다 당도가 2-3배 높으며, 씹는 순간 터지는 과즙이 일품입니다. 농장에서 직접 수확하여 신선도를 보장하며, 엄격한 품질 관리를 통해 최상의 토마토만을 선별합니다. 신선함과 맛을 동시에 만족시키는 저희 체리토마토로 건강한 식탁을 완성해보세요.\"\n" +
-        "}\n" +
-        "```\n" +
-        "**위 예시의 판매글은 약 450자입니다. 이 정도 길이로 작성해주세요.**\n" +
+        "## 🔧 농가명 처리 로직\n" +
+        "- 농가명이 비어있지 않은 경우: 판매글에 농가명을 활용한 스토리 작성\n" +
+        "- 농가명이 비어있는 경우: 농가명 없이 일반적인 농장 표현으로 작성\n" +
         "\n" +
-        "## 🚨 중요 주의사항\n" +
-        "- JSON 형식을 정확히 지켜주세요\n" +
-        "- 응답에는 JSON만 포함하고 다른 설명은 포함하지 마세요\n" +
-        "- 따옴표와 중괄호를 정확히 사용해주세요\n" +
-        "- **판매글은 반드시 350자 이상으로 충분히 길게 작성해주세요**\n" +
-        "- 판매글이 짧다면 농장 위치, 재배 방법, 맛의 특징, 보관법, 활용법 등을 더 추가하세요";
+        "## 📝 추가 지침\n" +
+        "- 모든 제공된 정보(작물명, 품종, 재배방식, 등급, 위치, 키워드)를 적절히 활용\n" +
+        "- 소비자에게 신뢰감과 구매 욕구를 불러일으키는 내용 작성\n" +
+        "- 농산물의 특별함과 품질을 강조하여 차별화된 가치 전달\n";
 
     private static final String LOGO_PROMPT_TEMPLATE =
         "Create a professional agricultural logo design based on the following specifications:\n" +
@@ -173,6 +172,9 @@ public class BrandingServiceImpl implements BrandingService {
         // AI 브랜딩 사용량 체크
         userService.incrementAiBrandingUsage(currentUser.getId());
         
+        // 기본 브랜드명 생성 (Fallback)
+        String fallbackBrandName = generateFallbackBrandName(request.cropName(), request.brandingKeywords());
+        
         BrandingProject project = BrandingProject.builder()
                 .title(request.title())
                 .user(currentUser)
@@ -180,6 +182,18 @@ public class BrandingServiceImpl implements BrandingService {
                 .variety(request.variety())
                 .cultivationMethod(request.cultivationMethod())
                 .grade(request.grade())
+                .includeFarmName(request.includeFarmName())
+                .brandingKeywords(request.brandingKeywords())
+                .cropAppealKeywords(request.cropAppealKeywords())
+                .logoImageKeywords(request.logoImageKeywords())
+                .generatedBrandName(fallbackBrandName)
+                .brandImageUrl(null) // 이미지 없이 기본 프로젝트 생성
+                .brandConcept(fallbackBrandName + "과 함께하는 건강한 삶")
+                .brandStory("정성과 사랑으로 키운 " + fallbackBrandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다. " +
+                        "우리 농장은 깨끗한 환경에서 친환경적인 재배 방식을 통해 최고 품질의 농산물을 생산합니다. " +
+                        "각각의 작물은 정성스럽게 관리되어 신선함과 맛을 극대화했으며, 엄격한 품질 관리를 통해 소비자에게 안전하고 건강한 먹거리를 제공합니다. " +
+                        fallbackBrandName + "의 특별함을 직접 경험해보세요. 자연이 선사하는 진정한 맛의 감동을 느낄 수 있을 것입니다. " +
+                        "건강한 가족의 식탁을 위한 최고의 선택, " + fallbackBrandName + "을 만나보세요.")
                 .build();
         
         BrandingProject savedProject = brandingProjectRepository.save(project);
@@ -394,14 +408,20 @@ public class BrandingServiceImpl implements BrandingService {
         String brandImageKeywords = String.join(", ", request.logoImageKeywords());
         String cropAppealKeywords = String.join(", ", request.cropAppealKeywords());
 
+        // 농가명 포함 여부에 따른 농가명 정보 설정
+        String farmName = "";
+        if (request.includeFarmName() != null && request.includeFarmName() && currentUser.getFarmName() != null) {
+            farmName = currentUser.getFarmName();
+        }
+
         // 홍보 문구/스토리 프롬프트 생성
         String conceptAndStoryPrompt = String.format(
             "**🚨 중요 길이 요구사항 🚨**\n" +
             "- 홍보 문구(concept): 15-35자\n" +
             "- 판매글(story): 최소 350자 이상 (400-500자 권장)\n" +
             "**판매글이 300자 미만이면 절대 안됩니다. 반드시 350자 이상으로 작성하세요.**\n\n" +
-            "작물명: %s\n품종: %s\n재배방식: %s\n등급: %s\n농가위치: %s\n브랜드명: %s\nGAP인증번호: %s\n브랜드이미지키워드: %s\n작물매력키워드: %s\n\n%s",
-            cropName, variety, cultivationMethod, grade, location, brandName, gapNumber, brandImageKeywords, cropAppealKeywords,
+            "작물명: %s\n품종: %s\n재배방식: %s\n등급: %s\n농가위치: %s\n농가명: %s\n브랜드명: %s\nGAP인증번호: %s\n브랜드이미지키워드: %s\n작물매력키워드: %s\n\n%s",
+            cropName, variety, cultivationMethod, grade, location, farmName, brandName, gapNumber, brandImageKeywords, cropAppealKeywords,
             CONCEPT_AND_STORY_PROMPT_TEMPLATE
         );
 
@@ -496,6 +516,7 @@ public class BrandingServiceImpl implements BrandingService {
                     .variety(request.variety())
                     .cultivationMethod(request.cultivationMethod())
                     .grade(request.grade())
+                    .includeFarmName(request.includeFarmName())
                     .brandingKeywords(request.brandingKeywords())
                     .cropAppealKeywords(request.cropAppealKeywords())
                     .logoImageKeywords(request.logoImageKeywords())
@@ -522,6 +543,7 @@ public class BrandingServiceImpl implements BrandingService {
                     .variety(request.variety())
                     .cultivationMethod(request.cultivationMethod())
                     .grade(request.grade())
+                    .includeFarmName(request.includeFarmName())
                     .brandingKeywords(request.brandingKeywords())
                     .cropAppealKeywords(request.cropAppealKeywords())
                     .logoImageKeywords(request.logoImageKeywords())
@@ -557,6 +579,12 @@ public class BrandingServiceImpl implements BrandingService {
         String brandImageKeywords = String.join(", ", request.logoImageKeywords());
         String cropAppealKeywords = String.join(", ", request.cropAppealKeywords());
 
+        // 농가명 포함 여부에 따른 농가명 정보 설정
+        String farmName = "";
+        if (request.includeFarmName() != null && request.includeFarmName() && currentUser.getFarmName() != null) {
+            farmName = currentUser.getFarmName();
+        }
+
         // 키워드 전달 상태 로깅
         log.info("점진적 브랜딩 요청 키워드 확인:");
         log.info("- brandingKeywords: {}", request.brandingKeywords());
@@ -564,6 +592,7 @@ public class BrandingServiceImpl implements BrandingService {
         log.info("- logoImageKeywords: {}", request.logoImageKeywords());
         log.info("- 조합된 brandImageKeywords: [{}]", brandImageKeywords);
         log.info("- 조합된 cropAppealKeywords: [{}]", cropAppealKeywords);
+        log.info("- 농가명 포함 여부: {}, 농가명: [{}]", request.includeFarmName(), farmName);
 
         // 홍보 문구/스토리 프롬프트 생성
         String conceptAndStoryPrompt = String.format(
@@ -571,8 +600,8 @@ public class BrandingServiceImpl implements BrandingService {
             "- 홍보 문구(concept): 15-35자\n" +
             "- 판매글(story): 최소 350자 이상 (400-500자 권장)\n" +
             "**판매글이 300자 미만이면 절대 안됩니다. 반드시 350자 이상으로 작성하세요.**\n\n" +
-            "작물명: %s\n품종: %s\n재배방식: %s\n등급: %s\n농가위치: %s\n브랜드명: %s\nGAP인증번호: %s\n브랜드이미지키워드: %s\n작물매력키워드: %s\n\n%s",
-            cropName, variety, cultivationMethod, grade, location, brandName, gapNumber, brandImageKeywords, cropAppealKeywords,
+            "작물명: %s\n품종: %s\n재배방식: %s\n등급: %s\n농가위치: %s\n농가명: %s\n브랜드명: %s\nGAP인증번호: %s\n브랜드이미지키워드: %s\n작물매력키워드: %s\n\n%s",
+            cropName, variety, cultivationMethod, grade, location, farmName, brandName, gapNumber, brandImageKeywords, cropAppealKeywords,
             CONCEPT_AND_STORY_PROMPT_TEMPLATE
         );
 
@@ -597,6 +626,7 @@ public class BrandingServiceImpl implements BrandingService {
                     .variety(request.variety())
                     .cultivationMethod(request.cultivationMethod())
                     .grade(request.grade())
+                    .includeFarmName(request.includeFarmName())
                     .brandingKeywords(request.brandingKeywords())
                     .cropAppealKeywords(request.cropAppealKeywords())
                     .logoImageKeywords(request.logoImageKeywords())
@@ -665,6 +695,7 @@ public class BrandingServiceImpl implements BrandingService {
                     .variety(request.variety())
                     .cultivationMethod(request.cultivationMethod())
                     .grade(request.grade())
+                    .includeFarmName(request.includeFarmName())
                     .brandingKeywords(request.brandingKeywords())
                     .cropAppealKeywords(request.cropAppealKeywords())
                     .logoImageKeywords(request.logoImageKeywords())

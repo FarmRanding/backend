@@ -40,6 +40,10 @@ public class BrandingProject extends BaseEntity {
     @Column(name = "grade")
     private Grade grade;
     
+    // 농가명 포함 여부 (판매글에만 영향)
+    @Column(name = "include_farm_name")
+    private Boolean includeFarmName;
+    
     // 키워드 정보 (TEXT로 저장, JSON 변환)
     @Convert(converter = JsonConverter.class)
     @Column(name = "branding_keywords", columnDefinition = "TEXT")
@@ -90,6 +94,16 @@ public class BrandingProject extends BaseEntity {
         this.variety = variety;
         this.cultivationMethod = cultivationMethod;
         this.grade = grade;
+    }
+    
+    public void updateBasicInfo(String title, String cropName, String variety, 
+                               String cultivationMethod, Grade grade, Boolean includeFarmName) {
+        this.title = title;
+        this.cropName = cropName;
+        this.variety = variety;
+        this.cultivationMethod = cultivationMethod;
+        this.grade = grade;
+        this.includeFarmName = includeFarmName;
     }
     
     public void updateGapInfo(String gapNumber, Boolean isGapVerified) {
@@ -144,32 +158,27 @@ public class BrandingProject extends BaseEntity {
      * 새로운 플로우: 모든 정보를 한 번에 설정하고 GPT 처리 후 완료
      */
     public void createCompleteProject(String title, String cropName, String variety, 
-                                    String cultivationMethod, Grade grade, Boolean hasGapCertification,
+                                    String cultivationMethod, Grade grade, Boolean includeFarmName,
+                                    Boolean hasGapCertification,
                                     List<String> brandingKeywords, List<String> cropAppealKeywords, 
                                     List<String> logoImageKeywords,
                                     String generatedBrandName, String promotionText, 
                                     String brandStory, String brandConcept, String brandImageUrl) {
-        // 기본 정보 설정
         this.title = title;
         this.cropName = cropName;
         this.variety = variety;
         this.cultivationMethod = cultivationMethod;
         this.grade = grade;
-        
-        // GAP 인증 정보 설정
+        this.includeFarmName = includeFarmName;
         this.isGapVerified = hasGapCertification;
-        
-        // 키워드 정보 설정
         this.brandingKeywords = brandingKeywords;
         this.cropAppealKeywords = cropAppealKeywords;
         this.logoImageKeywords = logoImageKeywords;
-        
-        // GPT 생성 결과 설정
         this.generatedBrandName = generatedBrandName;
         this.promotionText = promotionText;
         this.brandStory = brandStory;
         this.brandConcept = brandConcept;
         this.brandImageUrl = brandImageUrl;
-
+        this.imageGenerationStatus = ImageGenerationStatus.COMPLETED;
     }
 } 

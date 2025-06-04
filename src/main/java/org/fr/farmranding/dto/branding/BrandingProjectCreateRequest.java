@@ -32,6 +32,9 @@ public record BrandingProjectCreateRequest(
         @Schema(description = "등급", example = "SPECIAL")
         Grade grade,
         
+        @Schema(description = "농가명 포함 여부 (판매글에만 영향)", example = "true", defaultValue = "false")
+        Boolean includeFarmName,
+        
         @Schema(description = "GAP 인증 여부", example = "true")
         Boolean hasGapCertification,
         
