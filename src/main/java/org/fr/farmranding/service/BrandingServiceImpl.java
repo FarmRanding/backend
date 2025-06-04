@@ -35,71 +35,127 @@ public class BrandingServiceImpl implements BrandingService {
     private final ImageGenerationService imageGenerationService;
     
     private static final String BRAND_NAME_PROMPT_TEMPLATE =
-        "사용자로부터 정보를 수집하여 사용자 지정 작물에 적합한 브랜드명을 생성하세요. 다음과 같은 질문을 통해 사용자로부터 수집한 정보를 바탕으로 브랜드명을 생성하세요.\\n" +
-        "\\n" +
-        "정보:\\n" +
-        "- 작물명: {cropName}\\n" +
-        "- 품종: {variety}\\n" +
-        "- 브랜드 이미지 키워드: {brandingKeywords}\\n" +
-        "- 작물의 매력 키워드: {cropAppealKeywords}\\n" +
-        "\\n" +
-        "# 결과물에 사용될 정보\\n" +
-        "1. 작물명, 품종\\n" +
-        "2. 사용자가 원하는 브랜드 이미지\\n" +
-        "3. 작물이 가진 매력\\n" +
-        "\\n" +
-        "# 생성 시 주의사항 및 조건\\n" +
-        "- 사용자가 제공한 정보 중 작물명, 품종, 브랜드 이미지 키워드, 작물의 매력 키워드를 기반으로 적합한 브랜드명을 생성하세요.\\n" +
-        "- 짧고 기억에 남을 수 있는 단어 형태로 생성하세요.\\n" +
-        "- 단어를 2개 내외로 조합하여 작성하세요.\\n" +
-        "- 사용자로부터 얻은 정보 중 다른 농가와 차별화될 만한 요소, 혹은 소비자에게 더 매력적으로 다가갈 것이라 판단되는 요소를 분석 및 선별하여 브랜드명을 생성합니다.\\n" +
-        "- 농가 위치와 작물을 조합하거나 키워드에서 얻은 정보로 조합하는 등 참신하지만 읽었을 때 거부감 없는 브랜드명을 생성하세요.\\n" +
-        "    - 예: 무등산 꿀수박 (농가 위치: 무등산, 작물의 매력: 고당도)\\n" +
-        "\\n" +
-        "브랜드명만 간단히 응답해주세요.";
+        "사용자에게 질문하여 정보 수집 후 사용자 지정 작물에 적합한 브랜드명을 생성하세요.\n" +
+        "\n" +
+        "수집할 정보:\n" +
+        "1. **작물명 및 품종:** {cropName}, {variety}\n" +
+        "2. **사용자가 원하는 브랜드 이미지:** {brandingKeywords}\n" +
+        "3. **작물이 가진 매력:** {cropAppealKeywords}\n" +
+        "\n" +
+        "# Steps\n" +
+        "1. 사용자가 제공한 작물명 및 품종을 분석합니다.\n" +
+        "2. 사용자가 원하는 브랜드 이미지를 파악합니다. 이는 브랜드가 전달하고자 하는 느낌이나 인상을 의미합니다.\n" +
+        "3. 작물이 가지는 매력을 분석합니다. 작물이 가지는 독특한 장점을 중점적으로 고려합니다.\n" +
+        "\n" +
+        "# Output Format\n" +
+        "**⚠️ 중요: 브랜드명만 출력하세요. 다른 설명이나 문장은 절대 포함하지 마세요.**\n" +
+        "\n" +
+        "- **브랜드명:** 짧고 기억에 남는 형태로, 2개의 단어 내외로 구성합니다.\n" +
+        "- 브랜드명은 사용자가 제공한 작물명, 품종, 브랜드 이미지, 작물의 매력 요소를 분석하여 생성합니다.\n" +
+        "- 다른 농가와 차별화될 만한 요소를 반영하여 소비자에게 매력적으로 다가갈 수 있는 요소를 포함합니다.\n" +
+        "\n" +
+        "# Examples\n" +
+        "- 정보 입력:\n" +
+        "    - 작물명 및 품종: 토마토, 체리\n" +
+        "    - 브랜드 이미지: 신선하고 건강한 느낌\n" +
+        "    - 작물의 매력: 고당도의 맛과 아삭한 식감\n" +
+        "- 생성된 브랜드명:\n" +
+        "    - \"아삭체리탑\"\n" +
+        "\n" +
+        "# Notes\n" +
+        "- 브랜드명 생성 시 농가 위치나 다른 배경 정보를 활용하여 신선하고 참신한 느낌을 주도록 고려합니다.\n" +
+        "- 브랜드명이 직관적이고 긍정적인 인상을 줄 수 있도록 하여야 합니다.\n" +
+        "- 각 단계에서 얻은 정보를 충실히 반영해주세요.\n" +
+        "- **응답은 반드시 브랜드명만 포함하세요.**";
 
     private static final String CONCEPT_AND_STORY_PROMPT_TEMPLATE =
-        "# 🔽지령\n" +
-        "사용자가 제공한 정보를 활용하여 홍보 문구와 판매 글을 생성하세요.\n" +
+        "사용자로부터 정보를 수집하여 해당 작물의 홍보 문구와 판매글을 작성하세요. 목표는 작물의 고유한 브랜드 아이덴티티를 만드는 것입니다.\n" +
         "\n" +
-        "## 📋 생성 규칙\n" +
-        "### 홍보 문구 (반드시 지켜주세요)\n" +
-        "- **길이**: 15자 이상 40자 이하\n" +
-        "- **형식**: 한 줄로 간결하게\n" +
-        "- **내용**: 브랜드의 핵심 가치를 담은 캐치프레이즈\n" +
-        "- **어조**: 임팩트 있고 기억에 남는 문구\n" +
-        "- **예시**: \"달콤함이 터지는 프리미엄 토마토\", \"자연이 키운 건강한 맛\"\n" +
+        "## 📋 작성 요구사항\n" +
         "\n" +
-        "### 판매 글 (반드시 지켜주세요)\n" +
-        "- **길이**: 200자 이상 500자 이하\n" +
-        "- **내용**: 구체적인 스토리, 재배 과정, 품질, 차별점 포함\n" +
+        "### 홍보 문구 작성 규칙:\n" +
+        "- **길이**: 15자 이상 40자 이하 (필수)\n" +
+        "- **형식**: 한 줄의 매력적인 문구\n" +
+        "- **필수 조건**: 반드시 명사로 끝나야 함\n" +
+        "- **내용**: 작물의 특성을 강조하되 브랜드명은 포함하지 않음\n" +
+        "- **데이터 활용**: 작물명, 품종, 재배 방식, 등급, 농가 위치, 브랜드 이미지, 작물 매력\n" +
+        "\n" +
+        "### 판매글 작성 규칙:\n" +
+        "- **길이**: 400자 이상 600자 이하 (필수)\n" +
         "- **구성**: 농장 소개 → 재배 과정 → 품질/맛 → 구매 유도\n" +
+        "- **포함 요소**: 제공된 모든 정보를 의미있게 연결한 스토리\n" +
+        "- **데이터 활용**: 작물명, 품종, 재배 방식, 등급, 농가 위치, 농가명, GAP 인증(선택), 브랜드 이미지, 작물 매력\n" +
         "\n" +
-        "## 💡 성공 예시\n" +
-        "홍보 문구: 달콤함과 건강을 담은 미래호빵의 아삭호빵\n" +
-        "판매 글: 경기도 화성시 동탄면에서 자란 쫑마를 스파이시 큐트는 특등급의 마늘로, 노지에서 자연의 힘을 온전히 받아 성장했습니다. 따뜻하고 귀여운 브랜드 이미지에 걸맞게, 이 마늘은 풍부한 수분과 매콤한 맛으로 요리의 풍미를 한층 높여줍니다. 쫑마를은 그 자체로도 뛰어난 맛을 자랑하지만, 각종 요리에 활용하기에 최적의 선택입니다. 요리에 깊이를 더하고 싶다면, 쫑마를 스파이시 큐트를 추천합니다.\n" +
+        "# Steps\n" +
+        "1. 사용자로부터 제공받은 정보를 분석합니다.\n" +
+        "2. 정보를 바탕으로 작물의 특성과 매력을 분석하고, 브랜드 이미지에 맞는 포인트를 정리합니다.\n" +
+        "3. 홍보 문구와 판매글 각각의 요구사항에 따라 작성합니다.\n" +
         "\n" +
-        "## ⚠️ 주의사항\n" +
-        "- 홍보 문구는 절대 40자를 넘으면 안 됩니다\n" +
-        "- 판매 글은 반드시 200자 이상 작성해주세요\n" +
-        "- 반드시 아래 형식으로만 답변하세요\n" +
+        "# Examples\n" +
+        "- **입력 정보**\n" +
+        "    - 작물명: 사과, 품종: 후지, 재배 방식: 유기농, 등급: 프리미엄, 농가 위치: 경남 양산, 브랜드 이미지: 고급, 작물 매력: 신선하고 달콤한 맛\n" +
+        "- **홍보 문구 예시**\n" +
+        "    - \"자연이 품은 달콤함, 신선함을 경험하세요\"\n" +
+        "- **판매글 예시**\n" +
+        "    - \"경남 양산의 선도농장에서 유기농으로 재배된 프리미엄 후지 사과. 신선하고 달콤한 맛이 특징이며, 자연 그대로의 고급스러움을 선사합니다. 지금 바로 저희 농장의 특별한 사과를 만나보세요.\"\n" +
         "\n" +
-        "## 📤 출력 형식 (정확히 이 형식으로만 답변)\n" +
-        "홍보 문구: [15-40자 이내의 홍보 문구]\n" +
-        "판매 글: [200-500자 이내의 상세한 판매 글]";
+        "## ⚠️ 필수 출력 형식 (정확히 준수하세요)\n" +
+        "**아래 형식을 절대 변경하지 마세요. 콜론(:) 위치와 줄바꿈을 정확히 지켜주세요.**\n" +
+        "\n" +
+        "홍보 문구: [15-40자 이내, 명사로 끝나는 홍보 문구]\n" +
+        "판매 글: [400-600자 이내의 상세한 판매 글]\n" +
+        "\n" +
+        "# Notes\n" +
+        "- 홍보 문구는 반드시 명사로 끝나야 합니다.\n" +
+        "- 브랜드 이미지와 매력 포인트가 홍보 문구 및 판매글에 잘 녹아들어야 합니다.\n" +
+        "- 사용자 요구 사항에 맞는 내용 구성을 최우선으로 생각하세요.\n" +
+        "- **출력 형식을 절대 변경하지 마세요.**";
 
     private static final String LOGO_PROMPT_TEMPLATE =
-        "Create a professional agricultural logo design for '{brandName}' brand. The logo should include:\\n" +
-        "- A clean illustration of {cropName} as the main visual element\\n" +
-        "- The brand name '{brandName}' prominently displayed with an appropriate, harmonious font style that complements the overall design\\n" +
-        "- Keywords represented: {keywords}\\n" +
-        "- Clean vector style with modern typography\\n" +
-        "- Vibrant, fresh colors that convey quality and freshness\\n" +
-        "- Professional layout suitable for agricultural branding\\n" +
-        "- The font style should be readable, modern, and match the agricultural theme\\n" +
-        "- Ensure the text and graphics work together harmoniously\\n" +
-        "- Size: 1024x1024 pixels, high quality\\n" +
-        "Background: clean white or transparent";
+        "Create a professional agricultural logo design based on the following specifications:\n" +
+        "\n" +
+        "**Brand Information:**\n" +
+        "- Brand Name: '{brandName}'\n" +
+        "- Crop Name: {cropName}\n" +
+        "- Combined Keywords: {keywords}\n" +
+        "\n" +
+        "**Design Requirements:**\n" +
+        "\n" +
+        "1. **Central Image (Crop) Description:**\n" +
+        "   - Feature {cropName} as the main visual element with specific characteristics (color, shape, texture)\n" +
+        "   - Ensure the crop illustration is clean, detailed, and professionally rendered\n" +
+        "   - Emphasize the natural beauty and quality of the produce\n" +
+        "\n" +
+        "2. **Brand Atmosphere & Color Tone:**\n" +
+        "   - Apply colors and overall tone that match the keywords: {keywords}\n" +
+        "   - Use vibrant, fresh colors that convey quality and freshness\n" +
+        "   - Maintain a natural, agricultural aesthetic\n" +
+        "\n" +
+        "3. **Crop Appeal Points:**\n" +
+        "   - Reflect organic, pesticide-free, or premium quality aspects in the visual design\n" +
+        "   - Emphasize freshness and natural cultivation methods\n" +
+        "\n" +
+        "4. **Typography Instructions:**\n" +
+        "   - Display the brand name '{brandName}' prominently with a font that matches the agricultural theme\n" +
+        "   - Ensure the font is readable, modern, and harmonious with the overall design\n" +
+        "   - Text should complement the crop illustration perfectly\n" +
+        "\n" +
+        "**Layout Composition:**\n" +
+        "- Position the crop illustration in the center or upper-center\n" +
+        "- Place the brand name '{brandName}' below or integrated with the crop image\n" +
+        "- Add appropriate margins, outlines, or shadow effects if necessary\n" +
+        "- Ensure text and graphics work together harmoniously\n" +
+        "\n" +
+        "**Technical Specifications:**\n" +
+        "- Size: 1024x1024 pixels, high quality\n" +
+        "- Style: Clean vector style with modern typography\n" +
+        "- Background: Clean white or transparent\n" +
+        "- Professional layout suitable for agricultural branding\n" +
+        "\n" +
+        "**Final Requirements:**\n" +
+        "- The logo must clearly represent the agricultural brand identity\n" +
+        "- All elements should work cohesively to create a memorable brand mark\n" +
+        "- Ensure the design is scalable and works well in various sizes";
     
     @Override
     public BrandingProjectResponse createBrandingProject(BrandingProjectCreateRequest request, User currentUser) {
@@ -202,25 +258,91 @@ public class BrandingServiceImpl implements BrandingService {
         log.info("브랜드명 생성 시작: cropName={}, variety={}, brandingKeywords={}, cropAppealKeywords={}", 
                 request.cropName(), request.variety(), request.brandingKeywords(), request.cropAppealKeywords());
         
-        try {
-            // ChatModel을 사용한 브랜드명 생성
-            ChatResponse response = chatModel.call(
-                new Prompt(brandNamePrompt, OpenAiChatOptions.builder()
-                    .model("gpt-4o-mini")
-                    .maxTokens(50)
-                    .temperature(0.7)
-                    .build())
-            );
-            
-            String generatedBrandName = response.getResult().getOutput().getText().trim();
-            
-            log.info("브랜드명 생성 완료: cropName={}, brandName={}", request.cropName(), generatedBrandName);
-            return generatedBrandName;
-            
-        } catch (Exception e) {
-            log.error("브랜드명 생성 실패: cropName={}, error={}", request.cropName(), e.getMessage(), e);
-            throw new BusinessException(FarmrandingResponseCode.AI_SERVICE_ERROR);
+        // 재시도 로직 (최대 3회)
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            try {
+                log.info("브랜드명 생성 시도 {}/3: cropName={}", attempt, request.cropName());
+                
+                // ChatModel을 사용한 브랜드명 생성
+                ChatResponse response = chatModel.call(
+                    new Prompt(brandNamePrompt, OpenAiChatOptions.builder()
+                        .model("gpt-4o-mini")
+                        .maxTokens(30) // 브랜드명은 짧으므로 토큰 수 줄임
+                        .temperature(0.7)
+                        .build())
+                );
+                
+                String generatedBrandName = response.getResult().getOutput().getText().trim();
+                
+                // 브랜드명 검증
+                String validatedBrandName = validateBrandName(generatedBrandName, request.cropName());
+                if (validatedBrandName != null) {
+                    log.info("브랜드명 생성 성공 (시도 {}): cropName={}, brandName={}", 
+                        attempt, request.cropName(), validatedBrandName);
+                    return validatedBrandName;
+                }
+                
+                log.warn("브랜드명 검증 실패 (시도 {}): cropName={}, 생성된 이름={}", 
+                    attempt, request.cropName(), generatedBrandName);
+                
+            } catch (Exception e) {
+                log.error("브랜드명 생성 실패 (시도 {}): cropName={}, error={}", 
+                    attempt, request.cropName(), e.getMessage());
+            }
         }
+        
+        // 모든 재시도 실패 시 Fallback
+        String fallbackBrandName = generateFallbackBrandName(request.cropName(), request.brandingKeywords());
+        log.error("모든 재시도 실패, Fallback 사용: cropName={}, fallbackBrandName={}", 
+            request.cropName(), fallbackBrandName);
+        return fallbackBrandName;
+    }
+    
+    /**
+     * 브랜드명 검증
+     */
+    private String validateBrandName(String brandName, String cropName) {
+        if (brandName == null || brandName.trim().isEmpty()) {
+            log.warn("브랜드명이 비어있음");
+            return null;
+        }
+        
+        brandName = brandName.trim();
+        
+        // 불필요한 인용부호 제거
+        if (brandName.startsWith("\"") && brandName.endsWith("\"")) {
+            brandName = brandName.substring(1, brandName.length() - 1).trim();
+        }
+        
+        // 길이 검증 (2-20자)
+        if (brandName.length() < 2 || brandName.length() > 20) {
+            log.warn("브랜드명 길이 부적절: {}자 (2-20자 권장), 내용: [{}]", brandName.length(), brandName);
+            return null;
+        }
+        
+        // 단어 개수 검증 (공백 기준 1-3개 단어)
+        String[] words = brandName.split("\\s+");
+        if (words.length > 3) {
+            log.warn("브랜드명이 너무 복잡함: {}개 단어, 내용: [{}]", words.length, brandName);
+            return null;
+        }
+        
+        // 특수문자 체크 (기본적인 한글, 영문, 숫자만 허용)
+        if (!brandName.matches("^[가-힣a-zA-Z0-9\\s]+$")) {
+            log.warn("브랜드명에 허용되지 않는 문자 포함: [{}]", brandName);
+            return null;
+        }
+        
+        // 설명문이나 문장 형태인지 체크
+        if (brandName.contains("브랜드") || brandName.contains("이름") || 
+            brandName.contains("입니다") || brandName.contains("합니다") ||
+            brandName.length() > 15) {
+            log.warn("브랜드명이 설명문 형태: [{}]", brandName);
+            return null;
+        }
+        
+        log.debug("브랜드명 검증 성공: [{}]", brandName);
+        return brandName;
     }
     
     @Override
@@ -288,7 +410,11 @@ public class BrandingServiceImpl implements BrandingService {
                     // Fallback 값 반환
                     return new String[]{
                         brandName + "과 함께하는 건강한 삶",
-                        "정성과 사랑으로 키운 " + brandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다."
+                        "정성과 사랑으로 키운 " + brandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다. " +
+                        "우리 농장은 깨끗한 환경에서 친환경적인 재배 방식을 통해 최고 품질의 농산물을 생산합니다. " +
+                        "각각의 작물은 정성스럽게 관리되어 신선함과 맛을 극대화했으며, 엄격한 품질 관리를 통해 소비자에게 안전하고 건강한 먹거리를 제공합니다. " +
+                        brandName + "의 특별함을 직접 경험해보세요. 자연이 선사하는 진정한 맛의 감동을 느낄 수 있을 것입니다. " +
+                        "건강한 가족의 식탁을 위한 최고의 선택, " + brandName + "을 만나보세요."
                     };
                 }
             });
@@ -313,7 +439,11 @@ public class BrandingServiceImpl implements BrandingService {
                 // Fallback 값 사용
                 conceptStory = new String[]{
                     brandName + "과 함께하는 건강한 삶",
-                    "정성과 사랑으로 키운 " + brandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다."
+                    "정성과 사랑으로 키운 " + brandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다. " +
+                    "우리 농장은 깨끗한 환경에서 친환경적인 재배 방식을 통해 최고 품질의 농산물을 생산합니다. " +
+                    "각각의 작물은 정성스럽게 관리되어 신선함과 맛을 극대화했으며, 엄격한 품질 관리를 통해 소비자에게 안전하고 건강한 먹거리를 제공합니다. " +
+                    brandName + "의 특별함을 직접 경험해보세요. 자연이 선사하는 진정한 맛의 감동을 느낄 수 있을 것입니다. " +
+                    "건강한 가족의 식탁을 위한 최고의 선택, " + brandName + "을 만나보세요."
                 };
             }
             
@@ -359,7 +489,11 @@ public class BrandingServiceImpl implements BrandingService {
                     .logoImageKeywords(request.logoImageKeywords())
                     .generatedBrandName(brandName)
                     .brandConcept(brandName + "과 함께하는 건강한 삶")
-                    .brandStory("정성과 사랑으로 키운 " + brandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다.")
+                    .brandStory("정성과 사랑으로 키운 " + brandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다. " +
+                            "우리 농장은 깨끗한 환경에서 친환경적인 재배 방식을 통해 최고 품질의 농산물을 생산합니다. " +
+                            "각각의 작물은 정성스럽게 관리되어 신선함과 맛을 극대화했으며, 엄격한 품질 관리를 통해 소비자에게 안전하고 건강한 먹거리를 제공합니다. " +
+                            brandName + "의 특별함을 직접 경험해보세요. 자연이 선사하는 진정한 맛의 감동을 느낄 수 있을 것입니다. " +
+                            "건강한 가족의 식탁을 위한 최고의 선택, " + brandName + "을 만나보세요.")
                     .build();
             
             BrandingProject savedProject = brandingProjectRepository.save(fallbackProject);
@@ -494,7 +628,11 @@ public class BrandingServiceImpl implements BrandingService {
                     .logoImageKeywords(request.logoImageKeywords())
                     .generatedBrandName(brandName)
                     .brandConcept(brandName + "과 함께하는 건강한 삶")
-                    .brandStory("정성과 사랑으로 키운 " + brandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다.")
+                    .brandStory("정성과 사랑으로 키운 " + brandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다. " +
+                            "우리 농장은 깨끗한 환경에서 친환경적인 재배 방식을 통해 최고 품질의 농산물을 생산합니다. " +
+                            "각각의 작물은 정성스럽게 관리되어 신선함과 맛을 극대화했으며, 엄격한 품질 관리를 통해 소비자에게 안전하고 건강한 먹거리를 제공합니다. " +
+                            brandName + "의 특별함을 직접 경험해보세요. 자연이 선사하는 진정한 맛의 감동을 느낄 수 있을 것입니다. " +
+                            "건강한 가족의 식탁을 위한 최고의 선택, " + brandName + "을 만나보세요.")
                     .imageGenerationStatus(ImageGenerationStatus.FAILED)
                     .build();
             
@@ -573,18 +711,24 @@ public class BrandingServiceImpl implements BrandingService {
         log.error("모든 재시도 실패, Fallback 사용: brandName={}", brandName);
         return new String[]{
             brandName + "과 함께하는 건강한 삶",
-            "정성과 사랑으로 키운 " + brandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다. 우리의 정직한 재배 방식과 깐깐한 품질 관리를 통해 최고의 맛과 영양을 선사합니다."
+            "정성과 사랑으로 키운 " + brandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다. " +
+            "우리 농장은 깨끗한 환경에서 친환경적인 재배 방식을 통해 최고 품질의 농산물을 생산합니다. " +
+            "각각의 작물은 정성스럽게 관리되어 신선함과 맛을 극대화했으며, 엄격한 품질 관리를 통해 소비자에게 안전하고 건강한 먹거리를 제공합니다. " +
+            brandName + "의 특별함을 직접 경험해보세요. 자연이 선사하는 진정한 맛의 감동을 느낄 수 있을 것입니다. " +
+            "건강한 가족의 식탁을 위한 최고의 선택, " + brandName + "을 만나보세요."
         };
     }
     
     /**
-     * GPT 응답 파싱 및 검증
+     * GPT 응답 파싱 및 검증 (개선된 검증 로직)
      */
     private String[] parseAndValidateResponse(String fullResponse, String brandName) {
         try {
-            // 정규식을 이용한 강력한 파싱
+            log.debug("응답 파싱 시작: {}", fullResponse.substring(0, Math.min(200, fullResponse.length())));
+            
+            // 정규식을 이용한 강력한 파싱 (개선된 버전)
             java.util.regex.Pattern conceptPattern = java.util.regex.Pattern.compile(
-                "홍보\\s*문구\\s*[:：]\\s*(.+?)(?=\\n|판매)", 
+                "홍보\\s*문구\\s*[:：]\\s*(.+?)(?=\\n|판매|$)", 
                 java.util.regex.Pattern.DOTALL
             );
             java.util.regex.Pattern storyPattern = java.util.regex.Pattern.compile(
@@ -599,34 +743,83 @@ public class BrandingServiceImpl implements BrandingService {
                 String concept = conceptMatcher.group(1).trim();
                 String story = storyMatcher.group(1).trim();
                 
-                // 길이 검증
-                if (concept.length() < 10 || concept.length() > 50) {
-                    log.warn("홍보 문구 길이 부적절: {}자 (10-50자 권장)", concept.length());
+                // 홍보 문구 검증 (15-40자, 명사로 끝나야 함)
+                if (concept.length() < 15 || concept.length() > 40) {
+                    log.warn("홍보 문구 길이 부적절: {}자 (15-40자 필수), 내용: [{}]", concept.length(), concept);
                     return null;
                 }
                 
-                if (story.length() < 100 || story.length() > 600) {
-                    log.warn("판매 글 길이 부적절: {}자 (100-600자 권장)", story.length());
+                // 명사로 끝나는지 검증 (한국어 특성상 간단한 패턴 체크)
+                if (!concept.matches(".*[가-힣]$") || concept.endsWith("다") || concept.endsWith("요") || 
+                    concept.endsWith("니다") || concept.endsWith("습니다")) {
+                    log.warn("홍보 문구가 명사로 끝나지 않음: [{}]", concept);
                     return null;
                 }
                 
-                // 내용 검증 (너무 간단하거나 중복된 내용 체크)
-                if (concept.equals(story) || concept.length() > story.length()) {
-                    log.warn("홍보 문구와 판매 글이 비정상적: concept={}, story={}", 
+                // 판매 글 검증 (400-600자)
+                if (story.length() < 400 || story.length() > 600) {
+                    log.warn("판매 글 길이 부적절: {}자 (400-600자 필수), 내용: [{}]", 
+                        story.length(), story.substring(0, Math.min(100, story.length())));
+                    return null;
+                }
+                
+                // 내용 검증 (홍보 문구와 판매 글이 적절히 다른지)
+                if (concept.equals(story) || concept.length() >= story.length()) {
+                    log.warn("홍보 문구와 판매 글이 비정상적: conceptLen={}, storyLen={}", 
                         concept.length(), story.length());
                     return null;
                 }
                 
-                log.info("응답 파싱 성공: 홍보문구={}자, 판매글={}자", concept.length(), story.length());
+                // 브랜드명이 홍보 문구에 포함되어 있는지 체크 (포함되면 안 됨)
+                if (concept.contains(brandName)) {
+                    log.warn("홍보 문구에 브랜드명이 포함됨: [{}] contains [{}]", concept, brandName);
+                    return null;
+                }
+                
+                log.info("응답 파싱 및 검증 성공: 홍보문구={}자, 판매글={}자", concept.length(), story.length());
+                log.debug("홍보문구: [{}]", concept);
+                log.debug("판매글: [{}]", story.substring(0, Math.min(100, story.length())) + "...");
+                
                 return new String[]{concept, story};
             }
             
-            log.warn("정규식 매칭 실패: {}", fullResponse.substring(0, Math.min(100, fullResponse.length())));
+            log.warn("정규식 매칭 실패 - 출력 형식이 올바르지 않음");
+            log.debug("실패한 응답 내용: {}", fullResponse);
             return null;
             
         } catch (Exception e) {
             log.error("응답 파싱 중 오류: {}", e.getMessage());
             return null;
+        }
+    }
+    
+    /**
+     * Fallback 브랜드명 생성
+     */
+    private String generateFallbackBrandName(String cropName, List<String> brandingKeywords) {
+        // 키워드 기반 브랜드명 생성 시도
+        if (brandingKeywords != null && !brandingKeywords.isEmpty()) {
+            for (String keyword : brandingKeywords) {
+                if (keyword.length() <= 3) { // 짧은 키워드만 사용
+                    return keyword + cropName;
+                }
+            }
+        }
+        
+        // 기본 패턴들
+        String[] patterns = {
+            cropName + "원",     // 토마토원
+            "신선" + cropName,   // 신선토마토  
+            cropName + "팜",     // 토마토팜
+            "자연" + cropName,   // 자연토마토
+            cropName + "랜드"    // 토마토랜드
+        };
+        
+        // 작물명 길이에 따라 적절한 패턴 선택
+        if (cropName.length() <= 2) {
+            return patterns[0]; // 짧은 작물명엔 "원" 붙이기
+        } else {
+            return patterns[1]; // 긴 작물명엔 "신선" 앞에 붙이기
         }
     }
     
