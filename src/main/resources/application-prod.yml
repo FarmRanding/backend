@@ -3,14 +3,6 @@ spring:
     activate:
       on-profile: prod
 
-  ai:
-    openai:
-      api-key: ${OPENAI_API_KEY}
-      chat:
-        options:
-          model: gpt-4o-mini
-          temperature: 0.7
-
   datasource:
     url: "jdbc:mysql://${MYSQL_PROD_HOST}:${MYSQL_PROD_PORT}/${MYSQL_PROD_DATABASE}?useSSL=true&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
     username: "${MYSQL_PROD_USER}"

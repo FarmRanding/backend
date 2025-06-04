@@ -14,14 +14,6 @@ spring:
       stack:
         auto: false  # CloudFormation 자동 설정 비활성화
 
-  ai:
-    openai:
-      api-key: ${OPENAI_API_KEY}
-      chat:
-        options:
-          model: gpt-4o-mini
-          temperature: 0.7
-
   datasource:
     url: "jdbc:mysql://localhost:${MYSQL_PORT}/${MYSQL_DATABASE}"
     username: "${MYSQL_USER}"

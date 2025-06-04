@@ -23,6 +23,11 @@ repositories {
     mavenCentral()
 }
 
+// Java 컴파일 옵션 설정 - @RequestParam 에러 해결
+tasks.withType(JavaCompile) {
+    options.compilerArgs += ['-parameters']
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'

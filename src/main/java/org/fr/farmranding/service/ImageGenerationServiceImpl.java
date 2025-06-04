@@ -18,7 +18,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ImageGenerationServiceImpl implements ImageGenerationService {
     
-    @Value("${ai.openai.api-key-verify}")
+    @Value("${spring.ai.openai.api-key-verify}")
     private String openaiApiKey;
     
     private final RestTemplate restTemplate;
