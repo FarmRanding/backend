@@ -767,7 +767,7 @@ public class BrandingServiceImpl implements BrandingService {
                 
                 ChatResponse conceptResponse = chatModel.call(
                     new Prompt(prompt, OpenAiChatOptions.builder()
-                        .model("gpt-4o-mini")
+                        .model("gpt-4.1")
                         .maxTokens(1500) // 더 긴 응답을 위해 토큰 수 증가
                         .temperature(0.7) // 창의성을 위해 온도 조정
                         .build())
