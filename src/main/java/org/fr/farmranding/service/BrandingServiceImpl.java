@@ -117,8 +117,8 @@ public class BrandingServiceImpl implements BrandingService {
         "- 농가명이 비어있는 경우: 농가명 없이 일반적인 농장 표현으로 작성\n" +
         "\n" +
         "## 💎 GAP 처리 로직\n" +
-        "- GAP 인증 번호가 비어있지 않은 경우: 판매글에 GAP 인증을 활용한 스토리 작성\n" +
-        "- GAP 인증 번호가 비어있는 경우: GAP 인증 내용 없이 작성" +
+        "- GAP 인증 번호가 비어있지 않은 경우: 판매글에 GAP 인증을 활용한 스토리 작성 (단, GAP 인증 번호를 직접적으로 노출하지는 마세요.)\n" +
+        "- GAP 인증 번호가 비어있는 경우: GAP 인증 관련 내용 배제하고 작성 \n" +
         "## 📝 추가 지침\n" +
         "- 모든 제공된 정보(작물명, 품종, 재배방식, 등급, 위치, 키워드)를 적절히 활용\n" +
         "- 소비자에게 신뢰감과 구매 욕구를 불러일으키는 내용 작성\n" +
@@ -403,9 +403,18 @@ public class BrandingServiceImpl implements BrandingService {
 
         // 농가명 포함 여부에 따른 농가명 정보 설정
         String farmName = "";
+        log.info("=== 점진적 브랜딩 - 농가명 포함 여부 검증 시작 ===");
+        log.info("요청 includeFarmName: {}", request.includeFarmName());
+        log.info("사용자 농가명: {}", currentUser.getFarmName());
+        
         if (request.includeFarmName() != null && request.includeFarmName() && currentUser.getFarmName() != null) {
             farmName = currentUser.getFarmName();
+            log.info("✅ 농가명 프롬프트에 포함됨: [{}]", farmName);
+        } else {
+            log.info("❌ 농가명 프롬프트에 포함 안됨 - includeFarmName: {}, 사용자농가명존재: {}", 
+                request.includeFarmName(), currentUser.getFarmName() != null);
         }
+        log.info("=== 점진적 브랜딩 - 농가명 포함 여부 검증 완료 ===");
 
         // 홍보 문구/스토리 프롬프트 생성
         String conceptAndStoryPrompt = createConceptAndStoryPrompt(
@@ -662,7 +671,10 @@ public class BrandingServiceImpl implements BrandingService {
             String grade, String location, String farmName, String brandName, String gapNumber, 
             String brandingKeywords, String cropAppealKeywords) {
         
-        return String.format(
+        log.info("=== 프롬프트 생성 시작 ===");
+        log.info("농가명: [{}] ({})", farmName, farmName.isEmpty() ? "빈 값" : "포함됨");
+        
+        String finalPrompt = String.format(
             "**🚨 중요 길이 요구사항 🚨**\n" +
             "- 홍보 문구(concept): 15-35자\n" +
             "- 판매글(story): 최소 350자 이상 (400-500자 권장)\n" +
@@ -671,6 +683,11 @@ public class BrandingServiceImpl implements BrandingService {
             cropName, variety, cultivationMethod, grade, location, farmName, brandName, gapNumber, 
             brandingKeywords, cropAppealKeywords, CONCEPT_AND_STORY_PROMPT_TEMPLATE
         );
+        
+        log.info("=== 최종 프롬프트 생성 완료 ===");
+        log.debug("생성된 프롬프트 내용: {}", finalPrompt);
+        
+        return finalPrompt;
     }
     
     /**

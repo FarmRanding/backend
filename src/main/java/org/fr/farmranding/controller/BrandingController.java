@@ -175,6 +175,9 @@ public class BrandingController {
         log.info("- cropAppealKeywords: {}", request.cropAppealKeywords());
         log.info("- logoImageKeywords: {}", request.logoImageKeywords());
         log.info("- hasGapCertification: {}", request.hasGapCertification());
+        log.info("- gapCertificationNumber: {}", request.gapCertificationNumber());
+        log.info("- 🏪 includeFarmName: {}", request.includeFarmName());
+        log.info("- 사용자 농가명: {}", currentUser.getFarmName());
         
         BrandingProjectResponse response = brandingService.createBrandingProjectProgressive(request, currentUser, brandName);
         return ResponseEntity.status(HttpStatus.CREATED)
