@@ -40,7 +40,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/", "/login/**", "/oauth2/**", "/swagger/**", "/swagger-ui/**", 
                                "/v3/api-docs/**", "/actuator/**", "/api/home", "/api/auth/**", "/api/v1/branding/health",
-                               "/api/v1/images/**", "/api/v1/address/**", "/api/v1/gap/**").permitAll()
+                               "/api/v1/images/**", "/api/v1/address/**", "/api/v1/gap/**", "/api/v1/standard-codes/**").permitAll()
                 .anyRequest().authenticated()
             )
             .exceptionHandling(exceptions -> exceptions

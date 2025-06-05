@@ -53,6 +53,9 @@ farmranding:
   gap:
     api-url: ${GAP_API_URL}
     api-key: ${GAP_API_KEY}
+  api:
+    standard-code:
+      service-key: ${STANDARD_CODE_API_KEY}
 
 logging:
   level:
