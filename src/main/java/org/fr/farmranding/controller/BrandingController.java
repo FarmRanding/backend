@@ -180,4 +180,4 @@ public class BrandingController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(FarmrandingResponseBody.success(response));
     }
-} 
+}

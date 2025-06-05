@@ -116,56 +116,38 @@ public class BrandingServiceImpl implements BrandingService {
         "- 농가명이 비어있지 않은 경우: 판매글에 농가명을 활용한 스토리 작성\n" +
         "- 농가명이 비어있는 경우: 농가명 없이 일반적인 농장 표현으로 작성\n" +
         "\n" +
+        "## 💎 GAP 처리 로직\n" +
+        "- GAP 인증 번호가 비어있지 않은 경우: 판매글에 GAP 인증을 활용한 스토리 작성\n" +
+        "- GAP 인증 번호가 비어있는 경우: GAP 인증 내용 없이 작성" +
         "## 📝 추가 지침\n" +
         "- 모든 제공된 정보(작물명, 품종, 재배방식, 등급, 위치, 키워드)를 적절히 활용\n" +
         "- 소비자에게 신뢰감과 구매 욕구를 불러일으키는 내용 작성\n" +
         "- 농산물의 특별함과 품질을 강조하여 차별화된 가치 전달\n";
 
     private static final String LOGO_PROMPT_TEMPLATE =
-        "Create a professional agricultural logo design based on the following specifications:\n" +
-        "\n" +
-        "**Brand Information:**\n" +
-        "- Brand Name: '{brandName}'\n" +
-        "- Crop Name: {cropName}\n" +
-        "- Combined Keywords: {keywords}\n" +
-        "\n" +
-        "**Design Requirements:**\n" +
-        "\n" +
-        "1. **Central Image (Crop) Description:**\n" +
-        "   - Feature {cropName} as the main visual element with specific characteristics (color, shape, texture)\n" +
-        "   - Ensure the crop illustration is clean, detailed, and professionally rendered\n" +
-        "   - Emphasize the natural beauty and quality of the produce\n" +
-        "\n" +
-        "2. **Brand Atmosphere & Color Tone:**\n" +
-        "   - Apply colors and overall tone that match the keywords: {keywords}\n" +
-        "   - Use vibrant, fresh colors that convey quality and freshness\n" +
-        "   - Maintain a natural, agricultural aesthetic\n" +
-        "\n" +
-        "3. **Crop Appeal Points:**\n" +
-        "   - Reflect organic, pesticide-free, or premium quality aspects in the visual design\n" +
-        "   - Emphasize freshness and natural cultivation methods\n" +
-        "\n" +
-        "4. **Typography Instructions:**\n" +
-        "   - Display the brand name '{brandName}' prominently with a font that matches the agricultural theme\n" +
-        "   - Ensure the font is readable, modern, and harmonious with the overall design\n" +
-        "   - Text should complement the crop illustration perfectly\n" +
-        "\n" +
-        "**Layout Composition:**\n" +
-        "- Position the crop illustration in the center or upper-center\n" +
-        "- Place the brand name '{brandName}' below or integrated with the crop image\n" +
-        "- Add appropriate margins, outlines, or shadow effects if necessary\n" +
-        "- Ensure text and graphics work together harmoniously\n" +
-        "\n" +
-        "**Technical Specifications:**\n" +
-        "- Size: 1024x1024 pixels, high quality\n" +
-        "- Style: Clean vector style with modern typography\n" +
-        "- Background: Clean white or transparent\n" +
-        "- Professional layout suitable for agricultural branding\n" +
-        "\n" +
-        "**Final Requirements:**\n" +
-        "- The logo must clearly represent the agricultural brand identity\n" +
-        "- All elements should work cohesively to create a memorable brand mark\n" +
-        "- Ensure the design is scalable and works well in various sizes";
+            "다음 정보를 이용한 로고 디자인:\n" +
+                    "\n" +
+                    "1. 작물명 및 품종: {cropName}, {variety}\n" +
+                    "2. 브랜드 이미지 키워드: {brandingKeywords}\n" +
+                    "3. 작물 매력 키워드: {cropAppealKeywords}\n" +
+                    "4. 로고 이미지 스타일: {logoImageKeywords}\n" +
+                    "\n" +
+                    "• 중심 이미지(작물) 묘사:\n" +
+                    "  - 작물 '{cropName}'의 색감·모양·질감 구체 설명\n" +
+                    "\n" +
+                    "• 브랜드 분위기·컬러 톤:\n" +
+                    "  - '{brandingKeywords}'에 어울리는 색상 및 전반적 톤 제안\n" +
+                    "\n" +
+                    "• 작물 매력 포인트:\n" +
+                    "  - '{cropAppealKeywords}'를 시각화하여 자연 친화적이고 신선한 느낌 강조\n" +
+                    "\n" +
+                    "• 타이포그래피:\n" +
+                    "  - 브랜드명 '{brandName}'에 어울리는 폰트 및 배치 제안\n" +
+                    "\n" +
+                    "• 레이아웃 구성:\n" +
+                    "  - 작물 그림 중앙 상단 또는 중앙에 배치\n" +
+                    "  - 브랜드명 '{brandName}'은 그림 아래에 위치\n" +
+                    "  - 필요 시 여백·윤곽선·그림자 효과 활용\n";
     
     @Override
     public BrandingProjectResponse createBrandingProject(BrandingProjectCreateRequest request, User currentUser) {
@@ -404,9 +386,20 @@ public class BrandingServiceImpl implements BrandingService {
         String cultivationMethod = request.cultivationMethod() != null ? request.cultivationMethod() : "";
         String grade = request.grade() != null ? request.grade().getKoreanName() : "";
         String location = currentUser.getLocation() != null ? currentUser.getLocation() : "";
-        String gapNumber = ""; // BrandingProjectCreateRequest에 gapNumber가 없음
-        String brandImageKeywords = String.join(", ", request.logoImageKeywords());
-        String cropAppealKeywords = String.join(", ", request.cropAppealKeywords());
+        
+        // GAP 인증 정보 추출
+        String gapNumber = "";
+        if (request.hasGapCertification() != null && request.hasGapCertification() && request.gapCertificationNumber() != null) {
+            gapNumber = request.gapCertificationNumber();
+            log.info("GAP 인증 정보 확인됨: {}", gapNumber);
+        } else {
+            log.info("GAP 인증 정보 없음");
+        }
+        
+        // 키워드 정보 추출 및 로깅
+        String brandingKeywords = extractKeywords(request.brandingKeywords(), "브랜드 이미지");
+        String cropAppealKeywords = extractKeywords(request.cropAppealKeywords(), "작물 매력");
+        String logoImageKeywords = extractKeywords(request.logoImageKeywords(), "로고 이미지");
 
         // 농가명 포함 여부에 따른 농가명 정보 설정
         String farmName = "";
@@ -415,18 +408,16 @@ public class BrandingServiceImpl implements BrandingService {
         }
 
         // 홍보 문구/스토리 프롬프트 생성
-        String conceptAndStoryPrompt = String.format(
-            "**🚨 중요 길이 요구사항 🚨**\n" +
-            "- 홍보 문구(concept): 15-35자\n" +
-            "- 판매글(story): 최소 350자 이상 (400-500자 권장)\n" +
-            "**판매글이 300자 미만이면 절대 안됩니다. 반드시 350자 이상으로 작성하세요.**\n\n" +
-            "작물명: %s\n품종: %s\n재배방식: %s\n등급: %s\n농가위치: %s\n농가명: %s\n브랜드명: %s\nGAP인증번호: %s\n브랜드이미지키워드: %s\n작물매력키워드: %s\n\n%s",
-            cropName, variety, cultivationMethod, grade, location, farmName, brandName, gapNumber, brandImageKeywords, cropAppealKeywords,
-            CONCEPT_AND_STORY_PROMPT_TEMPLATE
+        String conceptAndStoryPrompt = createConceptAndStoryPrompt(
+            cropName, variety, cultivationMethod, grade, location, farmName, 
+            brandName, gapNumber, brandingKeywords, cropAppealKeywords
         );
 
-        // 이미지 생성용 영문 프롬프트 구성
-        String logoPrompt = createLogoImagePrompt(brandName, cropName, variety, brandImageKeywords, cropAppealKeywords);
+        // 이미지 생성용 프롬프트 구성
+        String logoPrompt = createLogoImagePrompt(
+            brandName, cropName, variety, 
+            brandingKeywords, cropAppealKeywords, logoImageKeywords
+        );
 
         try {
             log.info("브랜딩 생성 시작: brandName={}, cropName={}", brandName, cropName);
@@ -466,14 +457,7 @@ public class BrandingServiceImpl implements BrandingService {
                 } catch (Exception e) {
                     log.error("홍보 문구/스토리 생성 실패: brandName={}, error={}", brandName, e.getMessage());
                     // Fallback 값 반환
-                    return new String[]{
-                        brandName + "과 함께하는 건강한 삶",
-                        "정성과 사랑으로 키운 " + brandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다. " +
-                        "우리 농장은 깨끗한 환경에서 친환경적인 재배 방식을 통해 최고 품질의 농산물을 생산합니다. " +
-                        "각각의 작물은 정성스럽게 관리되어 신선함과 맛을 극대화했으며, 엄격한 품질 관리를 통해 소비자에게 안전하고 건강한 먹거리를 제공합니다. " +
-                        brandName + "의 특별함을 직접 경험해보세요. 자연이 선사하는 진정한 맛의 감동을 느낄 수 있을 것입니다. " +
-                        "건강한 가족의 식탁을 위한 최고의 선택, " + brandName + "을 만나보세요."
-                    };
+                    return createFallbackConceptAndStory(brandName);
                 }
             });
 
@@ -495,14 +479,7 @@ public class BrandingServiceImpl implements BrandingService {
             } catch (Exception e) {
                 log.error("홍보 문구/스토리 생성 타임아웃 또는 실패: brandName={}, error={}", brandName, e.getMessage());
                 // Fallback 값 사용
-                conceptStory = new String[]{
-                    brandName + "과 함께하는 건강한 삶",
-                    "정성과 사랑으로 키운 " + brandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다. " +
-                    "우리 농장은 깨끗한 환경에서 친환경적인 재배 방식을 통해 최고 품질의 농산물을 생산합니다. " +
-                    "각각의 작물은 정성스럽게 관리되어 신선함과 맛을 극대화했으며, 엄격한 품질 관리를 통해 소비자에게 안전하고 건강한 먹거리를 제공합니다. " +
-                    brandName + "의 특별함을 직접 경험해보세요. 자연이 선사하는 진정한 맛의 감동을 느낄 수 있을 것입니다. " +
-                    "건강한 가족의 식탁을 위한 최고의 선택, " + brandName + "을 만나보세요."
-                };
+                conceptStory = createFallbackConceptAndStory(brandName);
             }
             
             long totalTime = System.currentTimeMillis() - startTime;
@@ -520,10 +497,13 @@ public class BrandingServiceImpl implements BrandingService {
                     .brandingKeywords(request.brandingKeywords())
                     .cropAppealKeywords(request.cropAppealKeywords())
                     .logoImageKeywords(request.logoImageKeywords())
+                    .isGapVerified(request.hasGapCertification())
+                    .gapNumber(gapNumber)
                     .generatedBrandName(brandName)
                     .brandImageUrl(logoUrl) // null일 수 있음
                     .brandConcept(conceptStory[0])
                     .brandStory(conceptStory[1])
+                    .imageGenerationStatus(ImageGenerationStatus.PROCESSING)
                     .build();
             
             BrandingProject savedProject = brandingProjectRepository.save(project);
@@ -536,28 +516,7 @@ public class BrandingServiceImpl implements BrandingService {
             log.error("AI 기반 브랜딩 프로젝트 생성 실패: brandName={}, error={}", brandName, e.getMessage(), e);
             
             // Fallback으로 기본 프로젝트 생성
-            BrandingProject fallbackProject = BrandingProject.builder()
-                    .title(request.title())
-                    .user(currentUser)
-                    .cropName(request.cropName())
-                    .variety(request.variety())
-                    .cultivationMethod(request.cultivationMethod())
-                    .grade(request.grade())
-                    .includeFarmName(request.includeFarmName())
-                    .brandingKeywords(request.brandingKeywords())
-                    .cropAppealKeywords(request.cropAppealKeywords())
-                    .logoImageKeywords(request.logoImageKeywords())
-                    .generatedBrandName(brandName)
-                    .brandConcept(brandName + "과 함께하는 건강한 삶")
-                    .brandStory("정성과 사랑으로 키운 " + brandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다. " +
-                            "우리 농장은 깨끗한 환경에서 친환경적인 재배 방식을 통해 최고 품질의 농산물을 생산합니다. " +
-                            "각각의 작물은 정성스럽게 관리되어 신선함과 맛을 극대화했으며, 엄격한 품질 관리를 통해 소비자에게 안전하고 건강한 먹거리를 제공합니다. " +
-                            brandName + "의 특별함을 직접 경험해보세요. 자연이 선사하는 진정한 맛의 감동을 느낄 수 있을 것입니다. " +
-                            "건강한 가족의 식탁을 위한 최고의 선택, " + brandName + "을 만나보세요.")
-                    .build();
-            
-            BrandingProject savedProject = brandingProjectRepository.save(fallbackProject);
-            return BrandingProjectResponse.from(savedProject);
+            return createFallbackProject(request, currentUser, brandName, gapNumber);
         }
     }
     
@@ -575,9 +534,20 @@ public class BrandingServiceImpl implements BrandingService {
         String cultivationMethod = request.cultivationMethod() != null ? request.cultivationMethod() : "";
         String grade = request.grade() != null ? request.grade().getKoreanName() : "";
         String location = currentUser.getLocation() != null ? currentUser.getLocation() : "";
+        
+        // GAP 인증 정보 추출
         String gapNumber = "";
-        String brandImageKeywords = String.join(", ", request.logoImageKeywords());
-        String cropAppealKeywords = String.join(", ", request.cropAppealKeywords());
+        if (request.hasGapCertification() != null && request.hasGapCertification() && request.gapCertificationNumber() != null) {
+            gapNumber = request.gapCertificationNumber();
+            log.info("점진적 브랜딩 - GAP 인증 정보 확인됨: {}", gapNumber);
+        } else {
+            log.info("점진적 브랜딩 - GAP 인증 정보 없음");
+        }
+        
+        // 키워드 정보 추출 및 로깅
+        String brandingKeywords = extractKeywords(request.brandingKeywords(), "브랜드 이미지");
+        String cropAppealKeywords = extractKeywords(request.cropAppealKeywords(), "작물 매력");
+        String logoImageKeywords = extractKeywords(request.logoImageKeywords(), "로고 이미지");
 
         // 농가명 포함 여부에 따른 농가명 정보 설정
         String farmName = "";
@@ -585,24 +555,10 @@ public class BrandingServiceImpl implements BrandingService {
             farmName = currentUser.getFarmName();
         }
 
-        // 키워드 전달 상태 로깅
-        log.info("점진적 브랜딩 요청 키워드 확인:");
-        log.info("- brandingKeywords: {}", request.brandingKeywords());
-        log.info("- cropAppealKeywords: {}", request.cropAppealKeywords());
-        log.info("- logoImageKeywords: {}", request.logoImageKeywords());
-        log.info("- 조합된 brandImageKeywords: [{}]", brandImageKeywords);
-        log.info("- 조합된 cropAppealKeywords: [{}]", cropAppealKeywords);
-        log.info("- 농가명 포함 여부: {}, 농가명: [{}]", request.includeFarmName(), farmName);
-
         // 홍보 문구/스토리 프롬프트 생성
-        String conceptAndStoryPrompt = String.format(
-            "**🚨 중요 길이 요구사항 🚨**\n" +
-            "- 홍보 문구(concept): 15-35자\n" +
-            "- 판매글(story): 최소 350자 이상 (400-500자 권장)\n" +
-            "**판매글이 300자 미만이면 절대 안됩니다. 반드시 350자 이상으로 작성하세요.**\n\n" +
-            "작물명: %s\n품종: %s\n재배방식: %s\n등급: %s\n농가위치: %s\n농가명: %s\n브랜드명: %s\nGAP인증번호: %s\n브랜드이미지키워드: %s\n작물매력키워드: %s\n\n%s",
-            cropName, variety, cultivationMethod, grade, location, farmName, brandName, gapNumber, brandImageKeywords, cropAppealKeywords,
-            CONCEPT_AND_STORY_PROMPT_TEMPLATE
+        String conceptAndStoryPrompt = createConceptAndStoryPrompt(
+            cropName, variety, cultivationMethod, grade, location, farmName, 
+            brandName, gapNumber, brandingKeywords, cropAppealKeywords
         );
 
         try {
@@ -630,6 +586,8 @@ public class BrandingServiceImpl implements BrandingService {
                     .brandingKeywords(request.brandingKeywords())
                     .cropAppealKeywords(request.cropAppealKeywords())
                     .logoImageKeywords(request.logoImageKeywords())
+                    .isGapVerified(request.hasGapCertification())
+                    .gapNumber(gapNumber)
                     .generatedBrandName(brandName)
                     .brandImageUrl(null) // 이미지 아직 없음
                     .brandConcept(conceptStory[0])
@@ -644,7 +602,10 @@ public class BrandingServiceImpl implements BrandingService {
                 savedProject.getId(), textTime);
             
             // STEP 3: 백그라운드에서 이미지 생성 (비동기)
-            String logoPrompt = createLogoImagePrompt(brandName, cropName, variety, brandImageKeywords, cropAppealKeywords);
+            String logoPrompt = createLogoImagePrompt(
+                brandName, cropName, variety, 
+                brandingKeywords, cropAppealKeywords, logoImageKeywords
+            );
             
             CompletableFuture.runAsync(() -> {
                 try {
@@ -653,12 +614,8 @@ public class BrandingServiceImpl implements BrandingService {
                     
                     String logoUrl = imageGenerationService.generateBrandLogo(brandName, request.brandingKeywords(), logoPrompt);
                     
-                    // 이미지 생성 완료 후 DB 업데이트
-                    BrandingProject projectToUpdate = brandingProjectRepository.findById(savedProject.getId())
-                            .orElseThrow(() -> new RuntimeException("프로젝트를 찾을 수 없습니다: " + savedProject.getId()));
-                    
-                    projectToUpdate.completeImageGeneration(logoUrl);
-                    brandingProjectRepository.save(projectToUpdate);
+                    // 이미지 생성 완료 후 DB 업데이트 (새로운 트랜잭션)
+                    updateProjectImageAsync(savedProject.getId(), logoUrl);
                     
                     long logoEndTime = System.currentTimeMillis();
                     log.info("백그라운드 로고 생성 완료: projectId={}, 로고 처리시간={}ms", 
@@ -668,16 +625,8 @@ public class BrandingServiceImpl implements BrandingService {
                     log.error("백그라운드 로고 생성 실패: projectId={}, brandName={}, error={}", 
                         savedProject.getId(), brandName, e.getMessage());
                     
-                    // 실패 시 상태 업데이트
-                    try {
-                        BrandingProject projectToUpdate = brandingProjectRepository.findById(savedProject.getId())
-                                .orElseThrow(() -> new RuntimeException("프로젝트를 찾을 수 없습니다: " + savedProject.getId()));
-                        
-                        projectToUpdate.failImageGeneration();
-                        brandingProjectRepository.save(projectToUpdate);
-                    } catch (Exception updateError) {
-                        log.error("이미지 실패 상태 업데이트 실패: {}", updateError.getMessage());
-                    }
+                    // 실패 시 상태 업데이트 (새로운 트랜잭션)
+                    updateProjectImageFailAsync(savedProject.getId());
                 }
             });
             
@@ -688,63 +637,98 @@ public class BrandingServiceImpl implements BrandingService {
             log.error("점진적 브랜딩 생성 실패: brandName={}, error={}", brandName, e.getMessage(), e);
             
             // Fallback으로 기본 프로젝트 생성
-            BrandingProject fallbackProject = BrandingProject.builder()
-                    .title(request.title())
-                    .user(currentUser)
-                    .cropName(request.cropName())
-                    .variety(request.variety())
-                    .cultivationMethod(request.cultivationMethod())
-                    .grade(request.grade())
-                    .includeFarmName(request.includeFarmName())
-                    .brandingKeywords(request.brandingKeywords())
-                    .cropAppealKeywords(request.cropAppealKeywords())
-                    .logoImageKeywords(request.logoImageKeywords())
-                    .generatedBrandName(brandName)
-                    .brandConcept(brandName + "과 함께하는 건강한 삶")
-                    .brandStory("정성과 사랑으로 키운 " + brandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다. " +
-                            "우리 농장은 깨끗한 환경에서 친환경적인 재배 방식을 통해 최고 품질의 농산물을 생산합니다. " +
-                            "각각의 작물은 정성스럽게 관리되어 신선함과 맛을 극대화했으며, 엄격한 품질 관리를 통해 소비자에게 안전하고 건강한 먹거리를 제공합니다. " +
-                            brandName + "의 특별함을 직접 경험해보세요. 자연이 선사하는 진정한 맛의 감동을 느낄 수 있을 것입니다. " +
-                            "건강한 가족의 식탁을 위한 최고의 선택, " + brandName + "을 만나보세요.")
-                    .imageGenerationStatus(ImageGenerationStatus.FAILED)
-                    .build();
-            
-            BrandingProject savedProject = brandingProjectRepository.save(fallbackProject);
-            return BrandingProjectResponse.from(savedProject);
+            return createFallbackProject(request, currentUser, brandName, gapNumber);
         }
     }
     
     /**
-     * 로고 이미지 생성을 위한 프롬프트 생성 (새로운 템플릿 기반)
+     * 키워드 리스트를 문자열로 변환하고 로깅
      */
-    private String createLogoImagePrompt(String brandName, String cropName, String variety, String brandImageKeywords, String cropAppealKeywords) {
-        log.info("로고 프롬프트 생성 - brandName: {}, cropName: {}, variety: {}", brandName, cropName, variety);
-        log.info("키워드 정보 - brandImageKeywords: [{}], cropAppealKeywords: [{}]", brandImageKeywords, cropAppealKeywords);
-        
-        // 키워드 조합 (브랜드 이미지 + 작물 매력)
-        String combinedKeywords = "";
-        if (brandImageKeywords != null && !brandImageKeywords.trim().isEmpty() && 
-            cropAppealKeywords != null && !cropAppealKeywords.trim().isEmpty()) {
-            combinedKeywords = brandImageKeywords + ", " + cropAppealKeywords;
-        } else if (brandImageKeywords != null && !brandImageKeywords.trim().isEmpty()) {
-            combinedKeywords = brandImageKeywords;
-        } else if (cropAppealKeywords != null && !cropAppealKeywords.trim().isEmpty()) {
-            combinedKeywords = cropAppealKeywords;
-        } else {
-            log.warn("브랜드 이미지 키워드와 작물 매력 키워드가 모두 비어있습니다. 기본값을 사용합니다.");
-            combinedKeywords = "professional, fresh, quality, natural, modern";
+    private String extractKeywords(List<String> keywords, String keywordType) {
+        if (keywords == null || keywords.isEmpty()) {
+            log.warn("{} 키워드가 비어있습니다", keywordType);
+            return "";
         }
         
-        log.info("최종 조합된 키워드: [{}]", combinedKeywords);
+        String result = String.join(", ", keywords);
+        log.info("{} 키워드 추출: [{}]", keywordType, result);
+        return result;
+    }
+    
+    /**
+     * 홍보 문구/스토리 프롬프트 생성
+     */
+    private String createConceptAndStoryPrompt(String cropName, String variety, String cultivationMethod, 
+            String grade, String location, String farmName, String brandName, String gapNumber, 
+            String brandingKeywords, String cropAppealKeywords) {
         
+        return String.format(
+            "**🚨 중요 길이 요구사항 🚨**\n" +
+            "- 홍보 문구(concept): 15-35자\n" +
+            "- 판매글(story): 최소 350자 이상 (400-500자 권장)\n" +
+            "**판매글이 300자 미만이면 절대 안됩니다. 반드시 350자 이상으로 작성하세요.**\n\n" +
+            "작물명: %s\n품종: %s\n재배방식: %s\n등급: %s\n농가위치: %s\n농가명: %s\n브랜드명: %s\nGAP인증번호: %s\n브랜드이미지키워드: %s\n작물매력키워드: %s\n\n%s",
+            cropName, variety, cultivationMethod, grade, location, farmName, brandName, gapNumber, 
+            brandingKeywords, cropAppealKeywords, CONCEPT_AND_STORY_PROMPT_TEMPLATE
+        );
+    }
+    
+    /**
+     * 로고 이미지 생성을 위한 프롬프트 생성 (완전 개선된 버전)
+     */
+    private String createLogoImagePrompt(String brandName, String cropName, String variety, 
+            String brandingKeywords, String cropAppealKeywords, String logoImageKeywords) {
+        
+        log.info("=== 로고 프롬프트 생성 시작 ===");
+        log.info("브랜드명: [{}]", brandName);
+        log.info("작물명: [{}]", cropName);
+        log.info("품종: [{}]", variety);
+        log.info("브랜드 이미지 키워드: [{}]", brandingKeywords);
+        log.info("작물 매력 키워드: [{}]", cropAppealKeywords);
+        log.info("로고 이미지 키워드: [{}]", logoImageKeywords);
+        
+        // 키워드 검증 및 기본값 설정
+        String finalBrandingKeywords = validateAndDefaultKeywords(brandingKeywords, "fresh, professional, trustworthy");
+        String finalCropAppealKeywords = validateAndDefaultKeywords(cropAppealKeywords, "natural, quality, healthy");
+        String finalLogoImageKeywords = validateAndDefaultKeywords(logoImageKeywords, "modern, clean, simple");
+        String finalVariety = (variety != null && !variety.trim().isEmpty()) ? variety : "premium variety";
+        
+        log.info("최종 키워드 조합:");
+        log.info("- 브랜드 이미지: [{}]", finalBrandingKeywords);
+        log.info("- 작물 매력: [{}]", finalCropAppealKeywords);
+        log.info("- 로고 이미지: [{}]", finalLogoImageKeywords);
+        
+        // 프롬프트 생성
         String finalPrompt = LOGO_PROMPT_TEMPLATE
                 .replace("{brandName}", brandName)
                 .replace("{cropName}", cropName)
-                .replace("{keywords}", combinedKeywords);
+                .replace("{variety}", finalVariety)
+                .replace("{brandingKeywords}", finalBrandingKeywords)
+                .replace("{cropAppealKeywords}", finalCropAppealKeywords)
+                .replace("{logoImageKeywords}", finalLogoImageKeywords);
                 
-        log.debug("생성된 로고 프롬프트: {}", finalPrompt);
+        log.info("=== 최종 로고 프롬프트 생성 완료 ===");
+        log.debug("생성된 프롬프트 내용: {}", finalPrompt);
         
         return finalPrompt;
+    }
+    
+    /**
+     * 키워드 검증 및 기본값 설정
+     */
+    private String validateAndDefaultKeywords(String keywords, String defaultValue) {
+        if (keywords == null || keywords.trim().isEmpty()) {
+            log.warn("키워드가 비어있어 기본값 사용: [{}]", defaultValue);
+            return defaultValue;
+        }
+        
+        String trimmed = keywords.trim();
+        if (trimmed.length() < 3) {
+            log.warn("키워드가 너무 짧아 기본값 사용: [{}] -> [{}]", trimmed, defaultValue);
+            return defaultValue;
+        }
+        
+        return trimmed;
     }
     
     /**
@@ -782,14 +766,7 @@ public class BrandingServiceImpl implements BrandingService {
         }
         
         log.error("모든 재시도 실패, Fallback 사용: brandName={}", brandName);
-        return new String[]{
-            brandName + "과 함께하는 건강한 삶",
-            "정성과 사랑으로 키운 " + brandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다. " +
-            "우리 농장은 깨끗한 환경에서 친환경적인 재배 방식을 통해 최고 품질의 농산물을 생산합니다. " +
-            "각각의 작물은 정성스럽게 관리되어 신선함과 맛을 극대화했으며, 엄격한 품질 관리를 통해 소비자에게 안전하고 건강한 먹거리를 제공합니다. " +
-            brandName + "의 특별함을 직접 경험해보세요. 자연이 선사하는 진정한 맛의 감동을 느낄 수 있을 것입니다. " +
-            "건강한 가족의 식탁을 위한 최고의 선택, " + brandName + "을 만나보세요."
-        };
+        return createFallbackConceptAndStory(brandName);
     }
     
     /**
@@ -929,6 +906,49 @@ public class BrandingServiceImpl implements BrandingService {
     }
     
     /**
+     * Fallback 프로젝트 생성
+     */
+    private BrandingProjectResponse createFallbackProject(BrandingProjectCreateRequest request, User currentUser, String brandName, String gapNumber) {
+        String[] fallbackConceptStory = createFallbackConceptAndStory(brandName);
+        
+        BrandingProject fallbackProject = BrandingProject.builder()
+                .title(request.title())
+                .user(currentUser)
+                .cropName(request.cropName())
+                .variety(request.variety())
+                .cultivationMethod(request.cultivationMethod())
+                .grade(request.grade())
+                .includeFarmName(request.includeFarmName())
+                .brandingKeywords(request.brandingKeywords())
+                .cropAppealKeywords(request.cropAppealKeywords())
+                .logoImageKeywords(request.logoImageKeywords())
+                .isGapVerified(request.hasGapCertification())
+                .gapNumber(gapNumber)
+                .generatedBrandName(brandName)
+                .brandConcept(fallbackConceptStory[0])
+                .brandStory(fallbackConceptStory[1])
+                .imageGenerationStatus(ImageGenerationStatus.FAILED)
+                .build();
+        
+        BrandingProject savedProject = brandingProjectRepository.save(fallbackProject);
+        return BrandingProjectResponse.from(savedProject);
+    }
+    
+    /**
+     * Fallback 홍보문구/스토리 생성
+     */
+    private String[] createFallbackConceptAndStory(String brandName) {
+        return new String[]{
+            brandName + "과 함께하는 건강한 삶",
+            "정성과 사랑으로 키운 " + brandName + "입니다. 자연 그대로의 맛과 영양을 담아, 건강한 식탁을 만들어가는 브랜드입니다. " +
+            "우리 농장은 깨끗한 환경에서 친환경적인 재배 방식을 통해 최고 품질의 농산물을 생산합니다. " +
+            "각각의 작물은 정성스럽게 관리되어 신선함과 맛을 극대화했으며, 엄격한 품질 관리를 통해 소비자에게 안전하고 건강한 먹거리를 제공합니다. " +
+            brandName + "의 특별함을 직접 경험해보세요. 자연이 선사하는 진정한 맛의 감동을 느낄 수 있을 것입니다. " +
+            "건강한 가족의 식탁을 위한 최고의 선택, " + brandName + "을 만나보세요."
+        };
+    }
+    
+    /**
      * Fallback 브랜드명 생성
      */
     private String generateFallbackBrandName(String cropName, List<String> brandingKeywords) {
@@ -955,6 +975,58 @@ public class BrandingServiceImpl implements BrandingService {
             return patterns[0]; // 짧은 작물명엔 "원" 붙이기
         } else {
             return patterns[1]; // 긴 작물명엔 "신선" 앞에 붙이기
+        }
+    }
+    
+    /**
+     * 백그라운드 이미지 업데이트 (새로운 트랜잭션으로 데드락 방지)
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    public void updateProjectImageAsync(Long projectId, String logoUrl) {
+        try {
+            log.info("프로젝트 이미지 업데이트 시작: projectId={}", projectId);
+            
+            BrandingProject project = brandingProjectRepository.findById(projectId)
+                    .orElse(null);
+            
+            if (project == null) {
+                log.warn("프로젝트를 찾을 수 없음: projectId={}", projectId);
+                return;
+            }
+            
+            project.completeImageGeneration(logoUrl);
+            brandingProjectRepository.save(project);
+            
+            log.info("프로젝트 이미지 업데이트 완료: projectId={}", projectId);
+            
+        } catch (Exception e) {
+            log.error("프로젝트 이미지 업데이트 실패: projectId={}, error={}", projectId, e.getMessage());
+        }
+    }
+    
+    /**
+     * 백그라운드 이미지 실패 상태 업데이트 (새로운 트랜잭션으로 데드락 방지)
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    public void updateProjectImageFailAsync(Long projectId) {
+        try {
+            log.info("프로젝트 이미지 실패 상태 업데이트 시작: projectId={}", projectId);
+            
+            BrandingProject project = brandingProjectRepository.findById(projectId)
+                    .orElse(null);
+            
+            if (project == null) {
+                log.warn("프로젝트를 찾을 수 없음: projectId={}", projectId);
+                return;
+            }
+            
+            project.failImageGeneration();
+            brandingProjectRepository.save(project);
+            
+            log.info("프로젝트 이미지 실패 상태 업데이트 완료: projectId={}", projectId);
+            
+        } catch (Exception e) {
+            log.error("프로젝트 이미지 실패 상태 업데이트 실패: projectId={}, error={}", projectId, e.getMessage());
         }
     }
     
