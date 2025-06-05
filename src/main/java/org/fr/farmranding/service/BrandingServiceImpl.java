@@ -251,6 +251,14 @@ public class BrandingServiceImpl implements BrandingService {
         // AI 브랜딩 사용량 체크
         userService.validateAiBrandingUsage(currentUser.getId());
         
+        // 이전 생성된 브랜드명들을 프롬프트에 포함
+        String excludeBrandNames = "";
+        if (request.previousBrandNames() != null && !request.previousBrandNames().isEmpty()) {
+            excludeBrandNames = "\n\n⚠️ **중요**: 다음 브랜드명들은 이미 생성되었으므로 절대 사용하지 마세요: " + 
+                String.join(", ", request.previousBrandNames()) + 
+                "\n반드시 위 브랜드명들과 완전히 다른 새로운 브랜드명을 생성해주세요.";
+        }
+        
         // 새로운 브랜드명 생성 프롬프트 조합
         String brandNamePrompt = BRAND_NAME_PROMPT_TEMPLATE
                 .replace("{cropName}", request.cropName())
@@ -260,10 +268,11 @@ public class BrandingServiceImpl implements BrandingService {
                     request.cropAppealKeywords() != null && !request.cropAppealKeywords().isEmpty() 
                         ? String.join(", ", request.cropAppealKeywords())
                         : String.join(", ", request.brandingKeywords()) // fallback
-                );
+                ) + excludeBrandNames; // 🔥 NEW: 중복 방지 조건 추가
         
-        log.info("브랜드명 생성 시작: cropName={}, variety={}, brandingKeywords={}, cropAppealKeywords={}", 
-                request.cropName(), request.variety(), request.brandingKeywords(), request.cropAppealKeywords());
+        log.info("브랜드명 생성 시작: cropName={}, variety={}, brandingKeywords={}, cropAppealKeywords={}, excludeCount={}", 
+                request.cropName(), request.variety(), request.brandingKeywords(), request.cropAppealKeywords(),
+                request.previousBrandNames() != null ? request.previousBrandNames().size() : 0);
         
         // 재시도 로직 (최대 3회)
         for (int attempt = 1; attempt <= 3; attempt++) {
@@ -273,7 +282,7 @@ public class BrandingServiceImpl implements BrandingService {
                 // ChatModel을 사용한 브랜드명 생성
                 ChatResponse response = chatModel.call(
                     new Prompt(brandNamePrompt, OpenAiChatOptions.builder()
-                        .model("gpt-4o-mini")
+                        .model("gpt-4.1-mini")
                         .maxTokens(20) // 브랜드명은 매우 짧으므로 토큰 수 더 줄임
                         .temperature(0.8) // 창의성 높이기
                         .build())

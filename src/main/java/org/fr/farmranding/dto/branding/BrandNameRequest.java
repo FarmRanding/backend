@@ -22,5 +22,9 @@ public record BrandNameRequest(
 
     @Size(max = 10, message = "작물 매력 키워드는 최대 10개까지 선택할 수 있습니다.")
     @Schema(description = "작물의 매력 키워드 목록", example = "[\"달콤한\", \"아삭한\", \"과즙이 풍부한\"]")
-    List<String> cropAppealKeywords
+    List<String> cropAppealKeywords,
+    
+    @Size(max = 20, message = "이전 브랜드명은 최대 20개까지 전송할 수 있습니다.")
+    @Schema(description = "이전에 생성된 브랜드명 목록 (중복 방지용)", example = "[\"달콤사과\", \"프리미엄사과\"]")
+    List<String> previousBrandNames
 ) {} 
