@@ -121,6 +121,8 @@ public class BrandingServiceImpl implements BrandingService {
         "- GAP 인증 번호가 비어있는 경우: GAP 인증 관련 내용 배제하고 작성 \n" +
         "## 📝 추가 지침\n" +
         "- 모든 제공된 정보(작물명, 품종, 재배방식, 등급, 위치, 키워드)를 적절히 활용\n" +
+        "- 키워드를 사용할 때는 한글로 사용하세요. 영어는 절대로 사용하지 마세요.\n" +
+        "- 등급이 중급 혹은 하급인 경우에는 관련된 내용을 언급하지 마세요. \n" +
         "- 소비자에게 신뢰감과 구매 욕구를 불러일으키는 내용 작성\n" +
         "- 농산물의 특별함과 품질을 강조하여 차별화된 가치 전달\n";
 
@@ -284,7 +286,7 @@ public class BrandingServiceImpl implements BrandingService {
                     new Prompt(brandNamePrompt, OpenAiChatOptions.builder()
                         .model("gpt-4.1-mini")
                         .maxTokens(20) // 브랜드명은 매우 짧으므로 토큰 수 더 줄임
-                        .temperature(0.8) // 창의성 높이기
+                        .temperature(0.7) // 창의성 높이기
                         .build())
                 );
                 
