@@ -6,12 +6,13 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum MembershipType {
-    FREE("무료", 3, 5),
-    PRO("프로", Integer.MAX_VALUE, Integer.MAX_VALUE);
+    FREE("무료", 3, 5, 3),
+    PRO("프로", Integer.MAX_VALUE, Integer.MAX_VALUE, 10);
     
     private final String displayName;
     private final int aiBrandingLimit;
     private final int pricingSuggestionLimit;
+    private final int brandNameRegenerationLimit;
     
     public boolean isFreeMembership() {
         return this == FREE;

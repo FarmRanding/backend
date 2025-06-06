@@ -35,9 +35,6 @@ public class BrandingServiceImpl implements BrandingService {
     private final ImageGenerationService imageGenerationService;
     
     private static final String BRAND_NAME_PROMPT_TEMPLATE =
-        "사용자에게 질문하여 정보 수집 후 사용자 지정 작물에 적합한 브랜드명을 생성하세요.\n" +
-        "\n" +
-        "수집할 정보:\n" +
         "1. **작물명 및 품종:** {cropName}, {variety}\n" +
         "2. **사용자가 원하는 브랜드 이미지:** {brandingKeywords}\n" +
         "3. **작물이 가진 매력:** {cropAppealKeywords}\n" +
@@ -250,6 +247,21 @@ public class BrandingServiceImpl implements BrandingService {
     
     @Override
     public String generateBrandName(BrandNameRequest request, User currentUser, String prompt) {
+        // 🔥 NEW: 멤버십별 브랜드명 재생성 제한 체크
+        int regenerationCount = request.regenerationCount() != null ? request.regenerationCount() : 0;
+        int maxRegenerations = currentUser.getMembershipType().getBrandNameRegenerationLimit();
+        
+        log.info("🔍 브랜드명 재생성 제한 체크: userId={}, membershipType={}, regenerationCount={}, maxRegenerations={}", 
+                currentUser.getId(), currentUser.getMembershipType(), regenerationCount, maxRegenerations);
+        
+        if (regenerationCount >= maxRegenerations) {
+            String membershipName = currentUser.getMembershipType().getDisplayName();
+            log.warn("🚫 브랜드명 재생성 제한 초과: userId={}, membershipType={}, regenerationCount={}, maxRegenerations={}", 
+                    currentUser.getId(), currentUser.getMembershipType(), regenerationCount, maxRegenerations);
+            throw new BusinessException(FarmrandingResponseCode.BRAND_NAME_REGENERATION_LIMIT_EXCEEDED, 
+                String.format("브랜드명 재생성은 %s 멤버십은 %d번까지 가능합니다.", membershipName, maxRegenerations));
+        }
+        
         // AI 브랜딩 사용량 체크
         userService.validateAiBrandingUsage(currentUser.getId());
         
@@ -272,9 +284,10 @@ public class BrandingServiceImpl implements BrandingService {
                         : String.join(", ", request.brandingKeywords()) // fallback
                 ) + excludeBrandNames; // 🔥 NEW: 중복 방지 조건 추가
         
-        log.info("브랜드명 생성 시작: cropName={}, variety={}, brandingKeywords={}, cropAppealKeywords={}, excludeCount={}", 
+        log.info("브랜드명 생성 시작: cropName={}, variety={}, brandingKeywords={}, cropAppealKeywords={}, excludeCount={}, regenerationCount={}/{}", 
                 request.cropName(), request.variety(), request.brandingKeywords(), request.cropAppealKeywords(),
-                request.previousBrandNames() != null ? request.previousBrandNames().size() : 0);
+                request.previousBrandNames() != null ? request.previousBrandNames().size() : 0,
+                regenerationCount, maxRegenerations);
         
         // 재시도 로직 (최대 3회)
         for (int attempt = 1; attempt <= 3; attempt++) {
@@ -295,8 +308,8 @@ public class BrandingServiceImpl implements BrandingService {
                 // 브랜드명 검증
                 String validatedBrandName = validateBrandName(generatedBrandName, request.cropName());
                 if (validatedBrandName != null) {
-                    log.info("브랜드명 생성 성공 (시도 {}): cropName={}, brandName={}", 
-                        attempt, request.cropName(), validatedBrandName);
+                    log.info("브랜드명 생성 성공 (시도 {}): cropName={}, brandName={}, regenerationCount={}/{}", 
+                        attempt, request.cropName(), validatedBrandName, regenerationCount, maxRegenerations);
                     return validatedBrandName;
                 }
                 

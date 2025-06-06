@@ -38,7 +38,7 @@ spring:
       api-key-verify: ${OPENAI_API_KEY_VERIFY}
       chat:
         options:
-          model: gpt-4o-mini
+          model: gpt-4.1-mini
           temperature: 0.7
 
 springdoc:

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Min;
 import java.util.List;
 
 @Schema(description = "브랜드명 생성 요청 DTO")
@@ -26,5 +27,9 @@ public record BrandNameRequest(
     
     @Size(max = 20, message = "이전 브랜드명은 최대 20개까지 전송할 수 있습니다.")
     @Schema(description = "이전에 생성된 브랜드명 목록 (중복 방지용)", example = "[\"달콤사과\", \"프리미엄사과\"]")
-    List<String> previousBrandNames
+    List<String> previousBrandNames,
+    
+    @Min(value = 0, message = "재생성 횟수는 0 이상이어야 합니다.")
+    @Schema(description = "현재까지의 재생성 횟수", example = "1")
+    Integer regenerationCount
 ) {} 
