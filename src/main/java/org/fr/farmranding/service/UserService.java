@@ -45,6 +45,16 @@ public interface UserService {
     UserProfileResponse upgradeToPremiumPlusMembership(Long userId);
     
     /**
+     * 프리미엄 멤버십으로 다운그레이드
+     */
+    UserProfileResponse downgradeToPremiumMembership(Long userId);
+    
+    /**
+     * 무료 멤버십으로 다운그레이드
+     */
+    UserProfileResponse downgradeToFreeMembership(Long userId);
+    
+    /**
      * AI 브랜딩 사용량 증가
      */
     void incrementAiBrandingUsage(Long userId);

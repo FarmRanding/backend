@@ -71,14 +71,18 @@ public class UserServiceImpl implements UserService {
     public UserProfileResponse upgradeToPremiumMembership(Long userId) {
         User user = findUserById(userId);
         
-        if (user.getMembershipType().isPremiumMembership() || user.getMembershipType().isPremiumPlusMembership()) {
+        if (user.getMembershipType().isPremiumMembership()) {
+            throw new BusinessException(FarmrandingResponseCode.ALREADY_PRO_MEMBERSHIP);
+        }
+        
+        if (user.getMembershipType().isPremiumPlusMembership()) {
             throw new BusinessException(FarmrandingResponseCode.ALREADY_PRO_MEMBERSHIP);
         }
         
         user.upgradeToPremiumMembership();
         User savedUser = userRepository.save(user);
         
-        log.info("프리미엄 멤버십 업그레이드 완료: userId={}", userId);
+        log.info("프리미엄 멤버십 업그레이드 완료: userId={} ({}→PREMIUM)", userId, user.getMembershipType());
         
         return UserProfileResponse.from(savedUser);
     }
@@ -94,7 +98,39 @@ public class UserServiceImpl implements UserService {
         user.upgradeToPremiumPlusMembership();
         User savedUser = userRepository.save(user);
         
-        log.info("프리미엄 플러스 멤버십 업그레이드 완료: userId={}", userId);
+        log.info("프리미엄 플러스 멤버십 업그레이드 완료: userId={} ({}→PREMIUM_PLUS)", userId, user.getMembershipType());
+        
+        return UserProfileResponse.from(savedUser);
+    }
+    
+    @Override
+    public UserProfileResponse downgradeToPremiumMembership(Long userId) {
+        User user = findUserById(userId);
+        
+        if (!user.getMembershipType().isPremiumPlusMembership()) {
+            throw new BusinessException(FarmrandingResponseCode.INVALID_MEMBERSHIP_DOWNGRADE);
+        }
+        
+        user.downgradeToPremiumMembership();
+        User savedUser = userRepository.save(user);
+        
+        log.info("프리미엄 멤버십 다운그레이드 완료: userId={} ({}→PREMIUM)", userId, user.getMembershipType());
+        
+        return UserProfileResponse.from(savedUser);
+    }
+    
+    @Override
+    public UserProfileResponse downgradeToFreeMembership(Long userId) {
+        User user = findUserById(userId);
+        
+        if (user.getMembershipType().isFreeMembership()) {
+            throw new BusinessException(FarmrandingResponseCode.ALREADY_FREE_MEMBERSHIP);
+        }
+        
+        user.downgradeToFreeMembership();
+        User savedUser = userRepository.save(user);
+        
+        log.info("무료 멤버십 다운그레이드 완료: userId={} ({}→FREE)", userId, user.getMembershipType());
         
         return UserProfileResponse.from(savedUser);
     }
