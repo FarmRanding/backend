@@ -62,6 +62,16 @@ public class User extends BaseEntity {
         this.membershipType = MembershipType.PREMIUM_PLUS;
     }
     
+    public void downgradeToPremiumMembership() {
+        this.membershipType = MembershipType.PREMIUM;
+    }
+    
+    public void downgradeToFreeMembership() {
+        this.membershipType = MembershipType.FREE;
+        // 다운그레이드 시 사용량 카운트 초기화
+        resetUsageCounts();
+    }
+    
     public void incrementAiBrandingUsage() {
         this.aiBrandingUsageCount++;
     }

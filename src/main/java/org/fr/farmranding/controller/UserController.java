@@ -96,6 +96,34 @@ public class UserController {
         return ResponseEntity.ok(FarmrandingResponseBody.success(response));
     }
     
+    @Operation(summary = "프리미엄 멤버십 다운그레이드", description = "프리미엄 플러스에서 프리미엄 멤버십으로 다운그레이드합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "다운그레이드 성공"),
+            @ApiResponse(responseCode = "400", description = "유효하지 않은 다운그레이드"),
+            @ApiResponse(responseCode = "401", description = "인증 실패")
+    })
+    @PostMapping("/downgrade/premium")
+    public ResponseEntity<FarmrandingResponseBody<UserProfileResponse>> downgradeToPremiumMembership(
+            @CurrentUser User currentUser) {
+        
+        UserProfileResponse response = userService.downgradeToPremiumMembership(currentUser.getId());
+        return ResponseEntity.ok(FarmrandingResponseBody.success(response));
+    }
+    
+    @Operation(summary = "무료 멤버십 다운그레이드", description = "기존 멤버십에서 무료 멤버십으로 다운그레이드합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "다운그레이드 성공"),
+            @ApiResponse(responseCode = "400", description = "이미 무료 멤버십 사용자"),
+            @ApiResponse(responseCode = "401", description = "인증 실패")
+    })
+    @PostMapping("/downgrade/free")
+    public ResponseEntity<FarmrandingResponseBody<UserProfileResponse>> downgradeToFreeMembership(
+            @CurrentUser User currentUser) {
+        
+        UserProfileResponse response = userService.downgradeToFreeMembership(currentUser.getId());
+        return ResponseEntity.ok(FarmrandingResponseBody.success(response));
+    }
+    
     @Operation(summary = "회원 탈퇴", description = "현재 로그인한 사용자의 계정을 삭제합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "회원 탈퇴 성공"),

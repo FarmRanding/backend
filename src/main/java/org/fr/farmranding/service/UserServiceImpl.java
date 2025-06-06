@@ -71,14 +71,21 @@ public class UserServiceImpl implements UserService {
     public UserProfileResponse upgradeToPremiumMembership(Long userId) {
         User user = findUserById(userId);
         
-        if (user.getMembershipType().isPremiumMembership() || user.getMembershipType().isPremiumPlusMembership()) {
+        // 🔥 이미 프리미엄인 경우 현재 상태 그대로 성공 반환
+        if (user.getMembershipType().isPremiumMembership()) {
+            log.info("이미 프리미엄 멤버십 사용자: userId={}, 현재상태유지", userId);
+            return UserProfileResponse.from(user);
+        }
+        
+        // 프리미엄 플러스는 다운그레이드가 아니므로 예외
+        if (user.getMembershipType().isPremiumPlusMembership()) {
             throw new BusinessException(FarmrandingResponseCode.ALREADY_PRO_MEMBERSHIP);
         }
         
         user.upgradeToPremiumMembership();
         User savedUser = userRepository.save(user);
         
-        log.info("프리미엄 멤버십 업그레이드 완료: userId={}", userId);
+        log.info("프리미엄 멤버십 업그레이드 완료: userId={} (FREE→PREMIUM)", userId);
         
         return UserProfileResponse.from(savedUser);
     }
@@ -87,14 +94,57 @@ public class UserServiceImpl implements UserService {
     public UserProfileResponse upgradeToPremiumPlusMembership(Long userId) {
         User user = findUserById(userId);
         
+        // 🔥 이미 프리미엄 플러스인 경우 현재 상태 그대로 성공 반환
         if (user.getMembershipType().isPremiumPlusMembership()) {
-            throw new BusinessException(FarmrandingResponseCode.ALREADY_PRO_MEMBERSHIP);
+            log.info("이미 프리미엄 플러스 멤버십 사용자: userId={}, 현재상태유지", userId);
+            return UserProfileResponse.from(user);
         }
         
         user.upgradeToPremiumPlusMembership();
         User savedUser = userRepository.save(user);
         
-        log.info("프리미엄 플러스 멤버십 업그레이드 완료: userId={}", userId);
+        log.info("프리미엄 플러스 멤버십 업그레이드 완료: userId={} ({}→PREMIUM_PLUS)", userId, user.getMembershipType());
+        
+        return UserProfileResponse.from(savedUser);
+    }
+    
+    @Override
+    public UserProfileResponse downgradeToPremiumMembership(Long userId) {
+        User user = findUserById(userId);
+        
+        // 🔥 이미 프리미엄인 경우 현재 상태 그대로 성공 반환
+        if (user.getMembershipType().isPremiumMembership()) {
+            log.info("이미 프리미엄 멤버십 사용자: userId={}, 현재상태유지", userId);
+            return UserProfileResponse.from(user);
+        }
+        
+        // 프리미엄 플러스가 아닌 경우에만 예외 (FREE→PREMIUM은 업그레이드로 처리)
+        if (!user.getMembershipType().isPremiumPlusMembership()) {
+            throw new BusinessException(FarmrandingResponseCode.INVALID_MEMBERSHIP_DOWNGRADE);
+        }
+        
+        user.downgradeToPremiumMembership();
+        User savedUser = userRepository.save(user);
+        
+        log.info("프리미엄 멤버십 다운그레이드 완료: userId={} (PREMIUM_PLUS→PREMIUM)", userId);
+        
+        return UserProfileResponse.from(savedUser);
+    }
+    
+    @Override
+    public UserProfileResponse downgradeToFreeMembership(Long userId) {
+        User user = findUserById(userId);
+        
+        // 🔥 이미 무료 멤버십인 경우 현재 상태 그대로 성공 반환
+        if (user.getMembershipType().isFreeMembership()) {
+            log.info("이미 무료 멤버십 사용자: userId={}, 현재상태유지", userId);
+            return UserProfileResponse.from(user);
+        }
+        
+        user.downgradeToFreeMembership();
+        User savedUser = userRepository.save(user);
+        
+        log.info("무료 멤버십 다운그레이드 완료: userId={} ({}→FREE)", userId, user.getMembershipType());
         
         return UserProfileResponse.from(savedUser);
     }
