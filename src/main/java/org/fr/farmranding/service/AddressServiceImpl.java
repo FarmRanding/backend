@@ -168,7 +168,6 @@ public class AddressServiceImpl implements AddressService {
      * 3단계: Full-Text 검색 (ngram 인덱스 활용)
      */
     @Override
-    @Transactional(readOnly = true)
     public List<LegalDistrictResponse> searchLegalDistricts(String keyword, int limit) {
         if (keyword == null || keyword.trim().isEmpty()) {
             return new ArrayList<>();
@@ -209,31 +208,39 @@ public class AddressServiceImpl implements AddressService {
             }
         }
         
-        // 3단계: Full-Text 검색 (여전히 결과가 부족하면)
+        // 3단계: 부분 매칭 검색 (여전히 결과가 부족하면)
         if (resultSet.size() < limit) {
             try {
                 int remainingCount = limit - resultSet.size();
-                List<LegalDistrict> fullTextMatches = legalDistrictRepository
-                    .findByFullTextMatch(searchKeyword, remainingCount);
+                List<LegalDistrict> fallbackMatches = legalDistrictRepository
+                    .searchByKeywordFallback(searchKeyword, remainingCount);
                 
-                for (LegalDistrict district : fullTextMatches) {
+                for (LegalDistrict district : fallbackMatches) {
                     if (resultSet.size() >= limit) break;
                     resultSet.add(district);
                 }
                 
-                log.debug("3단계 Full-Text 검색 완료: {}개 추가 (총 {}개)", 
-                    fullTextMatches.size(), resultSet.size());
+                log.debug("3단계 부분 매칭 검색 완료: {}개 추가 (총 {}개)", 
+                    fallbackMatches.size(), resultSet.size());
             } catch (Exception e) {
-                log.warn("3단계 Full-Text 검색 실패, 레거시 검색으로 대체: {}", e.getMessage());
+                log.warn("3단계 부분 매칭 검색 실패, 기본 레거시 검색으로 대체: {}", e.getMessage());
                 
-                // Full-Text 검색 실패 시 레거시 검색으로 대체
-                if (resultSet.isEmpty()) {
-                    Pageable pageable = PageRequest.of(0, limit);
+                // 최후의 수단으로 기본 레거시 검색
+                try {
+                    int remainingCount = limit - resultSet.size();
+                    Pageable pageable = PageRequest.of(0, remainingCount);
                     List<LegalDistrict> legacyMatches = legalDistrictRepository
                         .searchByKeywordWithRelevance(searchKeyword, pageable);
-                    resultSet.addAll(legacyMatches);
                     
-                    log.debug("레거시 검색 완료: {}개 결과", legacyMatches.size());
+                    for (LegalDistrict district : legacyMatches) {
+                        if (resultSet.size() >= limit) break;
+                        resultSet.add(district);
+                    }
+                    
+                    log.debug("기본 레거시 검색 완료: {}개 추가 (총 {}개)", 
+                        legacyMatches.size(), resultSet.size());
+                } catch (Exception legacyEx) {
+                    log.error("모든 검색 방법 실패: {}", legacyEx.getMessage());
                 }
             }
         }
@@ -253,7 +260,6 @@ public class AddressServiceImpl implements AddressService {
     /**
      * 빠른 시도별 검색 (최적화된 정확 일치)
      */
-    @Transactional(readOnly = true)
     public List<LegalDistrictResponse> getDistrictsBySido(String sido, int limit) {
         if (sido == null || sido.trim().isEmpty()) {
             return new ArrayList<>();
@@ -278,7 +284,6 @@ public class AddressServiceImpl implements AddressService {
     /**
      * 법정동 코드로 단일 검색 (최적화)
      */
-    @Transactional(readOnly = true)
     public LegalDistrictResponse getDistrictByCode(String districtCode) {
         if (districtCode == null || districtCode.trim().isEmpty()) {
             return null;
@@ -291,7 +296,6 @@ public class AddressServiceImpl implements AddressService {
     /**
      * 시도 + 시군구 조합 검색 (최적화)
      */
-    @Transactional(readOnly = true)
     public List<LegalDistrictResponse> getDistrictsBySidoAndSigungu(String sido, String sigungu, int limit) {
         if (sido == null || sido.trim().isEmpty() || sigungu == null || sigungu.trim().isEmpty()) {
             return new ArrayList<>();

@@ -38,31 +38,7 @@ public interface LegalDistrictRepository extends JpaRepository<LegalDistrict, Lo
            "ORDER BY FUNCTION('CHAR_LENGTH', ld.fullAddress)")
     List<LegalDistrict> findPrefixMatch(@Param("keyword") String keyword, Pageable pageable);
 
-    /**
-     * 3단계: Full-Text 검색 (ngram parser 활용)
-     * MySQL Full-Text 인덱스를 활용한 고속 부분 매칭
-     */
-    @Query(value = "SELECT * " +
-                   "FROM legal_districts ld " +
-                   "WHERE MATCH(ld.full_address) AGAINST(:keyword IN NATURAL LANGUAGE MODE) " +
-                   "ORDER BY MATCH(ld.full_address) AGAINST(:keyword IN NATURAL LANGUAGE MODE) DESC, " +
-                   "         CHAR_LENGTH(ld.full_address) ASC " +
-                   "LIMIT :limit", nativeQuery = true)
-    List<LegalDistrict> findByFullTextMatch(@Param("keyword") String keyword, @Param("limit") int limit);
 
-    /**
-     * 3단계 대안: 복합 Full-Text 검색 (모든 컬럼 대상)
-     * 시도, 시군구, 동, 리, 전체주소를 모두 Full-Text 검색
-     */
-    @Query(value = "SELECT * " +
-                   "FROM legal_districts ld " +
-                   "WHERE MATCH(ld.sido, ld.sigungu, ld.dong, ld.ri, ld.full_address) " +
-                   "      AGAINST(:keyword IN NATURAL LANGUAGE MODE) " +
-                   "ORDER BY MATCH(ld.sido, ld.sigungu, ld.dong, ld.ri, ld.full_address) " +
-                   "         AGAINST(:keyword IN NATURAL LANGUAGE MODE) DESC, " +
-                   "         CHAR_LENGTH(ld.full_address) ASC " +
-                   "LIMIT :limit", nativeQuery = true)
-    List<LegalDistrict> findByCompositeFullTextMatch(@Param("keyword") String keyword, @Param("limit") int limit);
     
     // ===== 성능 최적화된 특별 검색 메서드 =====
     
@@ -118,6 +94,33 @@ public interface LegalDistrictRepository extends JpaRepository<LegalDistrict, Lo
            "END, " +
            "LENGTH(ld.fullAddress)")
     List<LegalDistrict> searchByKeywordWithRelevance(@Param("keyword") String keyword, Pageable pageable);
+    
+    /**
+     * 강화된 부분 매칭 검색 (Full-Text 인덱스 없이도 작동)
+     * 정확도 기반 정렬과 함께 부분 문자열 검색
+     */
+    @Query(value = "SELECT * FROM legal_districts ld WHERE " +
+                   "ld.sido LIKE CONCAT('%', :keyword, '%') OR " +
+                   "ld.sigungu LIKE CONCAT('%', :keyword, '%') OR " +
+                   "ld.dong LIKE CONCAT('%', :keyword, '%') OR " +
+                   "ld.ri LIKE CONCAT('%', :keyword, '%') OR " +
+                   "ld.full_address LIKE CONCAT('%', :keyword, '%') " +
+                   "ORDER BY " +
+                   "CASE " +
+                   "  WHEN ld.sido = :keyword THEN 1 " +
+                   "  WHEN ld.sigungu = :keyword THEN 2 " +
+                   "  WHEN ld.dong = :keyword THEN 3 " +
+                   "  WHEN ld.ri = :keyword THEN 4 " +
+                   "  WHEN ld.sido LIKE CONCAT(:keyword, '%') THEN 5 " +
+                   "  WHEN ld.sigungu LIKE CONCAT(:keyword, '%') THEN 6 " +
+                   "  WHEN ld.dong LIKE CONCAT(:keyword, '%') THEN 7 " +
+                   "  WHEN ld.ri LIKE CONCAT(:keyword, '%') THEN 8 " +
+                   "  WHEN ld.full_address LIKE CONCAT(:keyword, '%') THEN 9 " +
+                   "  ELSE 10 " +
+                   "END, " +
+                   "CHAR_LENGTH(ld.full_address) ASC " +
+                   "LIMIT :limit", nativeQuery = true)
+    List<LegalDistrict> searchByKeywordFallback(@Param("keyword") String keyword, @Param("limit") int limit);
     
     /**
      * 시도로 검색 - 레거시
