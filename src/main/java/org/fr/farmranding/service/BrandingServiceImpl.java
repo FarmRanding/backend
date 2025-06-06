@@ -187,7 +187,8 @@ public class BrandingServiceImpl implements BrandingService {
     @Transactional(readOnly = true)
     public BrandingProjectResponse getBrandingProject(Long projectId, User currentUser) {
         BrandingProject project = findProjectByIdAndUser(projectId, currentUser.getId());
-        return BrandingProjectResponse.from(project);
+        // 🔥 멤버십별 접근 제어 적용
+        return BrandingProjectResponse.from(project, currentUser);
     }
     
     @Override
@@ -195,7 +196,8 @@ public class BrandingServiceImpl implements BrandingService {
     public List<BrandingProjectResponse> getUserBrandingProjects(User currentUser) {
         List<BrandingProject> projects = brandingProjectRepository.findByUserId(currentUser.getId());
         return projects.stream()
-                .map(BrandingProjectResponse::from)
+                // 🔥 멤버십별 접근 제어 적용
+                .map(project -> BrandingProjectResponse.from(project, currentUser))
                 .toList();
     }
 

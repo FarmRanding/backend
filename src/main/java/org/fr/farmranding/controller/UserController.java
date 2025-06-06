@@ -68,17 +68,31 @@ public class UserController {
         return ResponseEntity.ok(FarmrandingResponseBody.success(response));
     }
     
-    @Operation(summary = "프로 멤버십 업그레이드", description = "무료 멤버십에서 프로 멤버십으로 업그레이드합니다.")
+    @Operation(summary = "프리미엄 멤버십 업그레이드", description = "무료 멤버십에서 프리미엄 멤버십으로 업그레이드합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "업그레이드 성공"),
-            @ApiResponse(responseCode = "400", description = "이미 프로 멤버십 사용자"),
+            @ApiResponse(responseCode = "400", description = "이미 프리미엄 이상 멤버십 사용자"),
             @ApiResponse(responseCode = "401", description = "인증 실패")
     })
-    @PostMapping("/upgrade")
-    public ResponseEntity<FarmrandingResponseBody<UserProfileResponse>> upgradeToProMembership(
+    @PostMapping("/upgrade/premium")
+    public ResponseEntity<FarmrandingResponseBody<UserProfileResponse>> upgradeToPremiumMembership(
             @CurrentUser User currentUser) {
         
-        UserProfileResponse response = userService.upgradeToProMembership(currentUser.getId());
+        UserProfileResponse response = userService.upgradeToPremiumMembership(currentUser.getId());
+        return ResponseEntity.ok(FarmrandingResponseBody.success(response));
+    }
+    
+    @Operation(summary = "프리미엄 플러스 멤버십 업그레이드", description = "기존 멤버십에서 프리미엄 플러스 멤버십으로 업그레이드합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "업그레이드 성공"),
+            @ApiResponse(responseCode = "400", description = "이미 프리미엄 플러스 멤버십 사용자"),
+            @ApiResponse(responseCode = "401", description = "인증 실패")
+    })
+    @PostMapping("/upgrade/premium-plus")
+    public ResponseEntity<FarmrandingResponseBody<UserProfileResponse>> upgradeToPremiumPlusMembership(
+            @CurrentUser User currentUser) {
+        
+        UserProfileResponse response = userService.upgradeToPremiumPlusMembership(currentUser.getId());
         return ResponseEntity.ok(FarmrandingResponseBody.success(response));
     }
     

@@ -68,17 +68,33 @@ public class UserServiceImpl implements UserService {
     }
     
     @Override
-    public UserProfileResponse upgradeToProMembership(Long userId) {
+    public UserProfileResponse upgradeToPremiumMembership(Long userId) {
         User user = findUserById(userId);
         
-        if (user.getMembershipType().isPro()) {
+        if (user.getMembershipType().isPremiumMembership() || user.getMembershipType().isPremiumPlusMembership()) {
             throw new BusinessException(FarmrandingResponseCode.ALREADY_PRO_MEMBERSHIP);
         }
         
-        user.upgradeToProMembership();
+        user.upgradeToPremiumMembership();
         User savedUser = userRepository.save(user);
         
-        log.info("프로 멤버십 업그레이드 완료: userId={}", userId);
+        log.info("프리미엄 멤버십 업그레이드 완료: userId={}", userId);
+        
+        return UserProfileResponse.from(savedUser);
+    }
+    
+    @Override
+    public UserProfileResponse upgradeToPremiumPlusMembership(Long userId) {
+        User user = findUserById(userId);
+        
+        if (user.getMembershipType().isPremiumPlusMembership()) {
+            throw new BusinessException(FarmrandingResponseCode.ALREADY_PRO_MEMBERSHIP);
+        }
+        
+        user.upgradeToPremiumPlusMembership();
+        User savedUser = userRepository.save(user);
+        
+        log.info("프리미엄 플러스 멤버십 업그레이드 완료: userId={}", userId);
         
         return UserProfileResponse.from(savedUser);
     }

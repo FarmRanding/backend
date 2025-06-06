@@ -38,7 +38,7 @@ public enum FarmrandingResponseCode {
     BAD_JSON_FORMAT(HttpStatus.BAD_REQUEST, "FR304", "잘못된 JSON 형식입니다"),
     
     // MEMBERSHIP & USAGE
-    ALREADY_PRO_MEMBERSHIP(HttpStatus.BAD_REQUEST, "FR401", "이미 프로 멤버십 사용자입니다"),
+    ALREADY_PRO_MEMBERSHIP(HttpStatus.BAD_REQUEST, "FR401", "이미 프리미엄 이상 멤버십 사용자입니다"),
     AI_BRANDING_USAGE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "FR402", "AI 브랜딩 사용 한도를 초과했습니다"),
     PRICING_USAGE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "FR403", "가격 제안 사용 한도를 초과했습니다"),
     BRAND_NAME_REGENERATION_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "FR404", "브랜드명 재생성 한도를 초과했습니다"),

@@ -35,9 +35,14 @@ public interface UserService {
     UserUsageResponse getUserUsage(Long userId);
     
     /**
-     * 프로 멤버십으로 업그레이드
+     * 프리미엄 멤버십으로 업그레이드
      */
-    UserProfileResponse upgradeToProMembership(Long userId);
+    UserProfileResponse upgradeToPremiumMembership(Long userId);
+    
+    /**
+     * 프리미엄 플러스 멤버십으로 업그레이드
+     */
+    UserProfileResponse upgradeToPremiumPlusMembership(Long userId);
     
     /**
      * AI 브랜딩 사용량 증가
