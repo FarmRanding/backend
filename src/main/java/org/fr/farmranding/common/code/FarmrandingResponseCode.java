@@ -72,6 +72,12 @@ public enum FarmrandingResponseCode {
     GAP_NOT_FOUND(HttpStatus.NOT_FOUND, "FR452", "GAP 인증번호를 찾을 수 없습니다. 인증번호를 다시 확인해 주세요."),
     GAP_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "FR453", "GAP 인증 정보 조회 중 오류가 발생했습니다."),
     
+    // PRODUCT CODE (FR460~)
+    PRODUCT_CODE_NOT_FOUND(HttpStatus.NOT_FOUND, "FR461", "품목 코드를 찾을 수 없습니다"),
+    PRODUCT_CODE_ALREADY_EXISTS(HttpStatus.CONFLICT, "FR462", "이미 존재하는 품목 코드입니다"),
+    GARAK_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "FR463", "가락시장 API 호출 중 오류가 발생했습니다"),
+    PRODUCT_CODE_SYNC_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "FR464", "품목 코드 동기화에 실패했습니다"),
+    
     // SERVER ERROR
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "FR500", "서버 내부 오류가 발생했습니다"),
     EXTERNAL_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "FR501", "외부 API 호출에 실패했습니다");
