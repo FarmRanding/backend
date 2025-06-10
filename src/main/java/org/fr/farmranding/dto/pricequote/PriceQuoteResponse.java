@@ -17,11 +17,14 @@ public record PriceQuoteResponse(
         @Schema(description = "사용자 ID", example = "1")
         Long userId,
         
-        @Schema(description = "작물명", example = "토마토")
-        String cropName,
+        @Schema(description = "품목 ID", example = "1")
+        Long productId,
         
-        @Schema(description = "품종명", example = "방울토마토")
-        String variety,
+        @Schema(description = "가락시장 품목 코드", example = "73003")
+        String garakCode,
+        
+        @Schema(description = "품목명", example = "가공 게지")
+        String productName,
         
         @Schema(description = "등급", example = "특급")
         String grade,
@@ -72,8 +75,9 @@ public record PriceQuoteResponse(
         return new PriceQuoteResponse(
                 request.getId(),
                 request.getUser().getId(),
-                request.getCropName(),
-                request.getVariety(),
+                request.getProductId(),
+                request.getGarakCode(),
+                request.getProductName(),
                 request.getGrade(),
                 request.getHarvestDate(),
                 request.getUnit(),

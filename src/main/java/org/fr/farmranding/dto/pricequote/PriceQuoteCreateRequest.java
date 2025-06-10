@@ -9,14 +9,18 @@ import java.time.LocalDate;
 @Schema(description = "가격 견적 생성 요청 DTO")
 public record PriceQuoteCreateRequest(
         
-        @NotBlank(message = "작물명은 필수입니다.")
-        @Size(min = 1, max = 50, message = "작물명은 1자 이상 50자 이하여야 합니다.")
-        @Schema(description = "작물명", example = "토마토", required = true)
-        String cropName,
+        @NotNull(message = "품목 ID는 필수입니다.")
+        @Schema(description = "품목 ID", example = "1", required = true)
+        Long productId,
         
-        @Size(max = 50, message = "품종명은 50자 이하여야 합니다.")
-        @Schema(description = "품종명", example = "방울토마토")
-        String variety,
+        @NotBlank(message = "가락시장 코드는 필수입니다.")
+        @Schema(description = "가락시장 품목 코드", example = "73003", required = true)
+        String garakCode,
+        
+        @NotBlank(message = "품목명은 필수입니다.")
+        @Size(min = 1, max = 100, message = "품목명은 1자 이상 100자 이하여야 합니다.")
+        @Schema(description = "품목명", example = "가공 게지", required = true)
+        String productName,
         
         @NotBlank(message = "등급은 필수입니다.")
         @Schema(description = "등급", example = "특급", required = true)

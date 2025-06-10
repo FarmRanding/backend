@@ -37,8 +37,9 @@ public class PriceQuoteServiceImpl implements PriceQuoteService {
         
         PriceQuoteRequest priceQuote = PriceQuoteRequest.builder()
                 .user(currentUser)
-                .cropName(request.cropName())
-                .variety(request.variety())
+                .productId(request.productId())
+                .garakCode(request.garakCode())
+                .productName(request.productName())
                 .grade(request.grade())
                 .harvestDate(request.harvestDate())
                 .unit(request.unit())
@@ -99,8 +100,9 @@ public class PriceQuoteServiceImpl implements PriceQuoteService {
         }
         
         priceQuote.updateBasicInfo(
-                request.cropName() != null ? request.cropName() : priceQuote.getCropName(),
-                request.variety() != null ? request.variety() : priceQuote.getVariety(),
+                request.productId() != null ? request.productId() : priceQuote.getProductId(),
+                request.garakCode() != null ? request.garakCode() : priceQuote.getGarakCode(),
+                request.productName() != null ? request.productName() : priceQuote.getProductName(),
                 request.grade() != null ? request.grade() : priceQuote.getGrade(),
                 request.harvestDate() != null ? request.harvestDate() : priceQuote.getHarvestDate(),
                 request.estimatedPrice() != null ? request.estimatedPrice() : priceQuote.getEstimatedPrice()
@@ -151,7 +153,7 @@ public class PriceQuoteServiceImpl implements PriceQuoteService {
     @Override
     @Transactional(readOnly = true)
     public List<PriceQuoteResponse> searchPriceQuotes(String keyword, User currentUser) {
-        List<PriceQuoteRequest> priceQuotes = priceQuoteRequestRepository.findByUserIdAndCropNameContaining(currentUser.getId(), keyword);
+        List<PriceQuoteRequest> priceQuotes = priceQuoteRequestRepository.findByUserIdAndProductNameContaining(currentUser.getId(), keyword);
         return priceQuotes.stream()
                 .map(PriceQuoteResponse::from)
                 .toList();
