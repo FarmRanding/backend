@@ -77,6 +77,7 @@ public enum FarmrandingResponseCode {
     PRODUCT_CODE_ALREADY_EXISTS(HttpStatus.CONFLICT, "FR462", "이미 존재하는 품목 코드입니다"),
     GARAK_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "FR463", "가락시장 API 호출 중 오류가 발생했습니다"),
     PRODUCT_CODE_SYNC_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "FR464", "품목 코드 동기화에 실패했습니다"),
+    GARAK_PRICE_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "FR465", "가락시장 가격 API 호출 중 오류가 발생했습니다"),
     
     // SERVER ERROR
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "FR500", "서버 내부 오류가 발생했습니다"),
