@@ -77,6 +77,21 @@ public class PriceQuoteRequest extends BaseEntity {
     @Column(name = "final_price", precision = 10, scale = 2)
     private BigDecimal finalPrice;
     
+    // 5년간 가격 추이 데이터 (JSON 형태로 저장)
+    @Column(name = "yearly_price_data", columnDefinition = "TEXT")
+    private String yearlyPriceData;
+    
+    // 최대/최소 가격 정보 (차트에서 사용)
+    @Column(name = "chart_min_price", precision = 10, scale = 2)
+    private BigDecimal chartMinPrice;
+    
+    @Column(name = "chart_max_price", precision = 10, scale = 2)
+    private BigDecimal chartMaxPrice;
+    
+    // 조회 기준일 정보
+    @Column(name = "lookup_date")
+    private LocalDate lookupDate;
+    
     // 비즈니스 메서드
     public void updateBasicInfo(Long productId, String garakCode, String productName, String grade, LocalDate harvestDate, BigDecimal estimatedPrice) {
         this.productId = productId;
@@ -109,10 +124,21 @@ public class PriceQuoteRequest extends BaseEntity {
         this.status = status;
     }
     
-    public void completeAnalysis(BigDecimal finalPrice, String analysisResult) {
+    public void updatePriceAnalysisComplete(BigDecimal finalPrice, BigDecimal minPrice, BigDecimal maxPrice, 
+                                          BigDecimal avgPrice, String yearlyPriceData, String analysisResult) {
         this.finalPrice = finalPrice;
+        this.minPrice = minPrice;
+        this.maxPrice = maxPrice;
+        this.avgPrice = avgPrice;
+        this.chartMinPrice = minPrice;
+        this.chartMaxPrice = maxPrice;
+        this.yearlyPriceData = yearlyPriceData;
         this.analysisResult = analysisResult;
         this.status = PriceQuoteStatus.COMPLETED;
+    }
+    
+    public void updateLookupDate(LocalDate lookupDate) {
+        this.lookupDate = lookupDate;
     }
     
     public boolean canEdit() {

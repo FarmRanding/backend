@@ -11,6 +11,7 @@ import org.fr.farmranding.auth.CurrentUser;
 import org.fr.farmranding.common.dto.FarmrandingResponseBody;
 import org.fr.farmranding.dto.pricequote.PriceQuoteCreateRequest;
 import org.fr.farmranding.dto.pricequote.PriceQuoteResponse;
+import org.fr.farmranding.dto.pricequote.PriceQuoteSaveRequest;
 import org.fr.farmranding.entity.user.User;
 import org.fr.farmranding.service.PriceQuoteService;
 import org.springframework.http.HttpStatus;
@@ -40,6 +41,23 @@ public class PriceQuoteController {
             @Valid @RequestBody PriceQuoteCreateRequest request) {
         
         PriceQuoteResponse response = priceQuoteService.createPriceQuote(request, currentUser);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(FarmrandingResponseBody.success(response));
+    }
+    
+    @Operation(summary = "가격 제안 결과 저장", description = "완전한 가격 제안 결과를 이력으로 저장합니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "가격 제안 결과 저장 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+        @ApiResponse(responseCode = "401", description = "인증 실패"),
+        @ApiResponse(responseCode = "403", description = "사용량 한도 초과")
+    })
+    @PostMapping("/save-result")
+    public ResponseEntity<FarmrandingResponseBody<PriceQuoteResponse>> savePriceQuoteResult(
+            @CurrentUser User currentUser,
+            @Valid @RequestBody PriceQuoteSaveRequest request) {
+        
+        PriceQuoteResponse response = priceQuoteService.savePriceQuoteResult(request, currentUser);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(FarmrandingResponseBody.success(response));
     }

@@ -2,6 +2,7 @@ package org.fr.farmranding.service;
 
 import org.fr.farmranding.dto.pricequote.PriceQuoteCreateRequest;
 import org.fr.farmranding.dto.pricequote.PriceQuoteResponse;
+import org.fr.farmranding.dto.pricequote.PriceQuoteSaveRequest;
 import org.fr.farmranding.dto.pricequote.PriceQuoteUpdateRequest;
 import org.fr.farmranding.entity.pricequote.PriceQuoteStatus;
 import org.fr.farmranding.entity.user.User;
@@ -17,6 +18,11 @@ public interface PriceQuoteService {
      * 가격 견적 요청 생성
      */
     PriceQuoteResponse createPriceQuote(PriceQuoteCreateRequest request, User currentUser);
+    
+    /**
+     * 가격 제안 결과 저장 (완전한 데이터)
+     */
+    PriceQuoteResponse savePriceQuoteResult(PriceQuoteSaveRequest request, User currentUser);
     
     /**
      * 내 가격 견적 요청 목록 조회

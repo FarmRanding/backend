@@ -6,6 +6,7 @@ import org.fr.farmranding.common.exception.BusinessException;
 import org.fr.farmranding.common.code.FarmrandingResponseCode;
 import org.fr.farmranding.dto.pricequote.PriceQuoteCreateRequest;
 import org.fr.farmranding.dto.pricequote.PriceQuoteResponse;
+import org.fr.farmranding.dto.pricequote.PriceQuoteSaveRequest;
 import org.fr.farmranding.dto.pricequote.PriceQuoteUpdateRequest;
 import org.fr.farmranding.entity.pricequote.PriceQuoteRequest;
 import org.fr.farmranding.entity.pricequote.PriceQuoteStatus;
@@ -143,7 +144,7 @@ public class PriceQuoteServiceImpl implements PriceQuoteService {
     public PriceQuoteResponse completeAnalysis(Long priceQuoteId, BigDecimal finalPrice, String analysisResult, User currentUser) {
         PriceQuoteRequest priceQuote = findPriceQuoteByIdAndUser(priceQuoteId, currentUser);
         
-        priceQuote.completeAnalysis(finalPrice, analysisResult);
+        priceQuote.updatePriceAnalysisComplete(finalPrice, null, null, null, null, analysisResult);
         
         log.info("가격 분석 완료 - 사용자: {}, ID: {}, 최종가격: {}", currentUser.getId(), priceQuoteId, finalPrice);
         
@@ -169,6 +170,50 @@ public class PriceQuoteServiceImpl implements PriceQuoteService {
                 .toList();
     }
     
+    @Override
+    public PriceQuoteResponse savePriceQuoteResult(PriceQuoteSaveRequest request, User currentUser) {
+        // 멤버십 사용량 제한 확인
+        if (!currentUser.canUsePricingSuggestion()) {
+            throw new BusinessException(FarmrandingResponseCode.PRICING_USAGE_LIMIT_EXCEEDED);
+        }
+        
+        // 최대/최소값 계산 (yearlyPriceData JSON에서 추출)
+        BigDecimal chartMinPrice = request.minPrice();
+        BigDecimal chartMaxPrice = request.maxPrice();
+        
+        PriceQuoteRequest priceQuote = PriceQuoteRequest.builder()
+                .user(currentUser)
+                .productId(request.productId())
+                .garakCode(request.garakCode())
+                .productName(request.productName())
+                .grade(request.grade())
+                .harvestDate(request.harvestDate())
+                .unit(request.unit())
+                .quantity(request.quantity())
+                .finalPrice(request.finalPrice())
+                .minPrice(request.minPrice())
+                .maxPrice(request.maxPrice())
+                .avgPrice(request.avgPrice())
+                .fairPrice(request.finalPrice()) // 최종 가격을 추천 가격으로 설정
+                .yearlyPriceData(request.yearlyPriceData())
+                .chartMinPrice(chartMinPrice)
+                .chartMaxPrice(chartMaxPrice)
+                .lookupDate(request.lookupDate())
+                .analysisResult("가락시장 데이터 기반 가격 분석 완료")
+                .status(PriceQuoteStatus.COMPLETED)
+                .build();
+        
+        PriceQuoteRequest savedPriceQuote = priceQuoteRequestRepository.save(priceQuote);
+        
+        // 사용량 증가
+        currentUser.incrementPricingSuggestionUsage();
+        
+        log.info("가격 제안 결과 저장 완료 - 사용자: {}, ID: {}, 품목: {}", 
+                currentUser.getId(), savedPriceQuote.getId(), request.productName());
+        
+        return PriceQuoteResponse.from(savedPriceQuote);
+    }
+
     // 내부 메서드
     private PriceQuoteRequest findPriceQuoteByIdAndUser(Long priceQuoteId, User currentUser) {
         return priceQuoteRequestRepository.findByIdAndUserId(priceQuoteId, currentUser.getId())
