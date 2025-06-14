@@ -30,7 +30,7 @@ public record PriceQuoteCreateRequest(
         @Schema(description = "수확일", example = "2024-02-15", required = true)
         LocalDate harvestDate,
         
-        @Schema(description = "단위", example = "10키로상자")
+        @Schema(description = "단위", example = "10kg")
         String unit,
         
         @Positive(message = "수량은 양수여야 합니다.")

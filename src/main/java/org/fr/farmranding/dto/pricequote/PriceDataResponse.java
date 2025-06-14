@@ -14,7 +14,7 @@ public record PriceDataResponse(
         @Schema(description = "등급", example = "특급")
         String grade,
         
-        @Schema(description = "단위", example = "10키로상자(특)")
+        @Schema(description = "단위", example = "10kg")
         String unit,
         
         @Schema(description = "조회 기간", example = "08월17일 ~ 08월17일")

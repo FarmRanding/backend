@@ -214,7 +214,7 @@ public class GarakPriceServiceImpl implements GarakPriceService {
         }
         
         return PriceDataResponse.from(productName, gradeDisplay, 
-                unit != null ? unit : "10키로상자", 
+                "10kg", 
                 period != null ? period : request.targetDate().format(DATE_FORMATTER),
                 yearlyPrices, standardPrice);
     }
@@ -236,7 +236,7 @@ public class GarakPriceServiceImpl implements GarakPriceService {
         return PriceDataResponse.from(
                 productName != null ? productName : "품목명 조회 실패",
                 convertGradeToDisplay(request.grade()),
-                "10키로상자",
+                "10kg",
                 request.targetDate().format(DATE_FORMATTER),
                 yearlyPrices,
                 BigDecimal.ZERO
@@ -369,7 +369,7 @@ public class GarakPriceServiceImpl implements GarakPriceService {
         return PriceDataResponse.from(
                 "품목 정보 조회 실패",
                 convertGradeToDisplay(request.grade()),
-                "10키로상자",
+                "10kg",
                 request.targetDate().format(DATE_FORMATTER),
                 yearlyPrices,
                 BigDecimal.ZERO

@@ -29,7 +29,7 @@ public record PriceQuoteSaveRequest(
         @Schema(description = "수확일", example = "2024-02-15", required = true)
         LocalDate harvestDate,
         
-        @Schema(description = "단위", example = "10키로상자")
+        @Schema(description = "단위", example = "10kg")
         String unit,
         
         @Schema(description = "수량", example = "1")

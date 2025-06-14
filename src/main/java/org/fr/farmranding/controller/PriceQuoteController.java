@@ -99,7 +99,7 @@ public class PriceQuoteController {
     public ResponseEntity<FarmrandingResponseBody<PriceQuoteResponse>> getPriceQuote(
             @CurrentUser User currentUser,
             @Parameter(description = "가격 견적 요청 ID", example = "1")
-            @PathVariable Long priceQuoteId) {
+            @PathVariable("priceQuoteId") Long priceQuoteId) {
         
         PriceQuoteResponse response = priceQuoteService.getPriceQuote(priceQuoteId, currentUser);
         return ResponseEntity.ok(FarmrandingResponseBody.success(response));
@@ -115,7 +115,7 @@ public class PriceQuoteController {
     public ResponseEntity<Void> deletePriceQuote(
             @CurrentUser User currentUser,
             @Parameter(description = "가격 견적 요청 ID", example = "1")
-            @PathVariable Long priceQuoteId) {
+            @PathVariable("priceQuoteId") Long priceQuoteId) {
         
         priceQuoteService.deletePriceQuote(priceQuoteId, currentUser);
         return ResponseEntity.noContent().build();
