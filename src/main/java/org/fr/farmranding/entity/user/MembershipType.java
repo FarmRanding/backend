@@ -39,4 +39,8 @@ public enum MembershipType {
     public boolean hasUnlimitedPricing() {
         return this == PREMIUM || this == PREMIUM_PLUS;
     }
+    
+    public boolean isPremiumOrAbove() {
+        return this == PREMIUM || this == PREMIUM_PLUS;
+    }
 } 

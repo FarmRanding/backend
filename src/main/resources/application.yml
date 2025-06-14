@@ -56,6 +56,9 @@ farmranding:
   garak:
     id: ${GARAK_ID}
     password: ${GARAK_PASSWORD}
+  kamis:
+    cert-id: ${KAMIS_CERT_ID}
+    cert-key: ${KAMIS_CERT_KEY}
   api:
     standard-code:
       service-key: ${STANDARD_CODE_API_KEY}

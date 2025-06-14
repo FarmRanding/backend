@@ -79,6 +79,11 @@ public enum FarmrandingResponseCode {
     PRODUCT_CODE_SYNC_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "FR464", "품목 코드 동기화에 실패했습니다"),
     GARAK_PRICE_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "FR465", "가락시장 가격 API 호출 중 오류가 발생했습니다"),
     
+    // PREMIUM PRICE SUGGESTION (FR470~)
+    PREMIUM_MEMBERSHIP_REQUIRED(HttpStatus.FORBIDDEN, "FR471", "프리미엄 멤버십 이상이 필요한 기능입니다"),
+    PREMIUM_PRICE_SUGGESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "FR472", "프리미엄 가격 제안을 찾을 수 없습니다"),
+    PREMIUM_PRICE_SUGGESTION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "FR473", "프리미엄 가격 제안에 대한 접근 권한이 없습니다"),
+    
     // SERVER ERROR
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "FR500", "서버 내부 오류가 발생했습니다"),
     EXTERNAL_API_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "FR501", "외부 API 호출에 실패했습니다");
