@@ -22,6 +22,10 @@ public record PremiumPriceRequest(
         @Schema(description = "품종 코드", example = "00", required = false)
         String productVarietyCode,
         
+        @Size(max = 10, message = "등급 코드는 10자 이하여야 합니다.")
+        @Schema(description = "등급 코드 (04:상, 05:중, 06:하)", example = "04", required = false)
+        String productRankCode,
+        
         @Size(max = 50, message = "거래 위치는 50자 이하여야 합니다.")
         @Schema(description = "거래 위치 (지역명)", example = "서울", required = false)
         String location,

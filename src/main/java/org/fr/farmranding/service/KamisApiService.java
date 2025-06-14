@@ -146,6 +146,45 @@ public class KamisApiService {
                 .kindCode(kindCode)
                 .startDate(startDate)
                 .endDate(endDate)
+                .hasRegionalData(false) // 기본값, 나중에 지역 확인 시 업데이트
+                .build();
+    }
+    
+    /**
+     * 지역별 데이터 포함하여 소매/도매 데이터 조회
+     */
+    public KamisPriceResponse fetchBothPriceDataWithRegion(String itemCategoryCode, String itemCode, 
+                                                          String kindCode, String productRankCode,
+                                                          LocalDate startDate, LocalDate endDate, 
+                                                          String targetLocation) {
+        
+        log.info("지역별 소매/도매 가격 데이터 통합 조회 시작: itemCode={}, kindCode={}, 지역={}, 기간={} ~ {}", 
+            itemCode, kindCode, targetLocation, startDate, endDate);
+        
+        // 소매 데이터 조회
+        String retailData = fetchRetailPriceData(itemCategoryCode, itemCode, kindCode, 
+                                                productRankCode, startDate, endDate);
+        
+        // 도매 데이터 조회
+        String wholesaleData = fetchWholesalePriceData(itemCategoryCode, itemCode, kindCode, 
+                                                      productRankCode, startDate, endDate);
+        
+        // 지역 데이터 존재 여부 확인 (소매 또는 도매 중 하나라도 있으면 true)
+        boolean hasRegionalRetail = hasRegionalData(retailData, targetLocation);
+        boolean hasRegionalWholesale = hasRegionalData(wholesaleData, targetLocation);
+        boolean hasRegional = hasRegionalRetail || hasRegionalWholesale;
+        
+        log.info("지역 데이터 확인 결과: 소매={}, 도매={}, 전체={}", 
+            hasRegionalRetail, hasRegionalWholesale, hasRegional);
+        
+        return KamisPriceResponse.builder()
+                .retailData(retailData)
+                .wholesaleData(wholesaleData)
+                .itemCode(itemCode)
+                .kindCode(kindCode)
+                .startDate(startDate)
+                .endDate(endDate)
+                .hasRegionalData(hasRegional)
                 .build();
     }
     
@@ -189,6 +228,41 @@ public class KamisApiService {
     }
     
     /**
+     * 지역별 데이터 존재 여부 확인
+     */
+    public boolean hasRegionalData(String jsonData, String targetLocation) {
+        if (jsonData == null || jsonData.trim().isEmpty() || "{}".equals(jsonData.trim())) {
+            return false;
+        }
+        
+        try {
+            JsonNode rootNode = objectMapper.readTree(jsonData);
+            JsonNode dataNode = rootNode.path("data");
+            
+            if (dataNode.isArray()) {
+                for (JsonNode item : dataNode) {
+                    String marketName = item.path("marketname").asText("");
+                    String countyName = item.path("countyname").asText("");
+                    
+                    // 지역명이 포함되어 있는지 확인
+                    if (marketName.contains(targetLocation) || countyName.contains(targetLocation)) {
+                        log.info("지역 데이터 발견: targetLocation={}, marketName={}, countyName={}", 
+                            targetLocation, marketName, countyName);
+                        return true;
+                    }
+                }
+            }
+            
+            log.info("지역 데이터 없음: targetLocation={}", targetLocation);
+            return false;
+            
+        } catch (Exception e) {
+            log.warn("지역 데이터 확인 중 오류: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
      * KAMIS 가격 응답 데이터 클래스
      */
     public static class KamisPriceResponse {
@@ -198,6 +272,7 @@ public class KamisApiService {
         private final String kindCode;
         private final LocalDate startDate;
         private final LocalDate endDate;
+        private final boolean hasRegionalData;
         
         private KamisPriceResponse(Builder builder) {
             this.retailData = builder.retailData;
@@ -206,6 +281,7 @@ public class KamisApiService {
             this.kindCode = builder.kindCode;
             this.startDate = builder.startDate;
             this.endDate = builder.endDate;
+            this.hasRegionalData = builder.hasRegionalData;
         }
         
         public static Builder builder() {
@@ -219,6 +295,7 @@ public class KamisApiService {
             private String kindCode;
             private LocalDate startDate;
             private LocalDate endDate;
+            private boolean hasRegionalData;
             
             public Builder retailData(String retailData) {
                 this.retailData = retailData;
@@ -250,6 +327,11 @@ public class KamisApiService {
                 return this;
             }
             
+            public Builder hasRegionalData(boolean hasRegionalData) {
+                this.hasRegionalData = hasRegionalData;
+                return this;
+            }
+            
             public KamisPriceResponse build() {
                 return new KamisPriceResponse(this);
             }
@@ -262,5 +344,6 @@ public class KamisApiService {
         public String getKindCode() { return kindCode; }
         public LocalDate getStartDate() { return startDate; }
         public LocalDate getEndDate() { return endDate; }
+        public boolean hasRegionalData() { return hasRegionalData; }
     }
 } 

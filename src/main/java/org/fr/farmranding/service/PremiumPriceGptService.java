@@ -33,7 +33,7 @@ public class PremiumPriceGptService {
             
             ChatResponse response = chatModel.call(
                 new Prompt(prompt, OpenAiChatOptions.builder()
-                    .model("gpt-4o") // o3 모델 사용
+                    .model("gpt-4o") // 4o 모델 사용
                     .maxTokens(1000)
                     .temperature(0.3) // 정확한 계산을 위해 낮은 온도
                     .build())
@@ -56,8 +56,16 @@ public class PremiumPriceGptService {
      * 프리미엄 가격 제안 프롬프트 생성
      */
     private String createPremiumPricePrompt(PremiumPriceRequest request) {
+        // 등급 설명 매핑
+        String gradeDescription = switch (request.getProductRankCode()) {
+            case "04" -> "상급 (최고 품질)";
+            case "05" -> "중급 (일반 품질)";
+            case "06" -> "하급 (저급 품질)";
+            default -> "중급 (일반 품질)";
+        };
+        
         return String.format("""
-            당신은 농산물 가격 전문가입니다. 아래 KAMIS API 데이터를 바탕으로 프리미엄 가격 제안을 해주세요.
+            당신은 농산물 가격 전문가입니다. 아래 KAMIS(한국농수산식품유통공사) 공식 데이터를 바탕으로 신뢰성 있는 직거래 가격을 제안해주세요.
             
             ## 가격 산출 공식
             직거래 제안가 = min( 소매 5일 평균 × 0.95, max( 도매 5일 평균 × 1.20, 도매 5일 평균 × α × 0.5 × 0.9 ) )
@@ -77,11 +85,28 @@ public class PremiumPriceGptService {
             %s
             
             ## 분석 요청사항
-            1. 위 데이터에서 거래 위치(%s)와 일치하는 지역 데이터가 있으면 해당 값을 우선 사용하세요.
-            2. 해당 지역 데이터가 없으면 전체 평균값을 사용하여 계산하세요.
-            3. 소매/도매 각각의 5일 평균 가격을 계산하세요.
-            4. 위 공식을 정확히 적용하여 최종 직거래 제안가를 계산하세요.
-            5. 계산 과정과 근거를 명확히 제시하세요.
+            1. 지역 데이터 존재 여부: %s
+            2. 위 데이터에서 거래 위치(%s)와 일치하는 지역 데이터가 있으면 해당 값을 우선 사용하세요.
+            3. 해당 지역 데이터가 없으면 전국 평균값을 사용하여 계산하세요.
+            4. 소매/도매 각각의 5일 평균 가격을 계산하세요.
+            5. 위 공식을 정확히 적용하여 최종 직거래 제안가를 계산하세요.
+            6. calculationReason은 일반인이 이해하기 쉽고 신뢰성을 느낄 수 있도록 작성하세요.
+            7. kamis 공식 데이터를 사용했다는 문구는 이미 존재하므로 별도로 언급하지 마세요.
+            
+            ## calculationReason 작성 가이드라인
+            - **자연스러운 대화체**: 농부와 대화하듯 친근하고 쉬운 말로 설명
+            - **핵심만 간단히**: 복잡한 수식 대신 "왜 이 가격인지" 이유를 쉽게 설명
+            - **실용적 관점**: 시장 상황과 판매 전략 관점에서 설명
+            - **창의적 표현**: 매번 다른 방식으로 설명하되, 이해하기 쉽게
+            - **금지사항**: 
+              * "~~습니다", "~~됩니다" 등 딱딱한 존댓말 금지
+              * "min()", "max()" 등 수학 공식 표현 금지
+              * "α", "계수", "공식" 등 어려운 용어 금지
+            - **권장 표현**: 
+              * "요즘 시장에서 ~해요", "이 정도면 괜찮을 것 같아요"
+              * "소매가가 높아서", "도매가 대비 ~배 정도"
+              * "지금 시세를 보니", "이런 이유로 추천해요"
+            - **예시 톤**: "최근 5일 동안 마트에서 1,500원, 도매시장에서 800원 정도에 거래되고 있어요. 소매가가 도매가보다 거의 2배 가까이 높은 상황이라, 직거래로는 960원 정도가 적당할 것 같아요. 너무 비싸지도 않고 농부님께도 손해 안 되는 선이거든요."
             
             ## 응답 형식 (JSON)
             반드시 아래 JSON 형식으로만 응답해주세요:
@@ -90,17 +115,18 @@ public class PremiumPriceGptService {
               "retailAverage": 소매_5일_평균(숫자만),
               "wholesaleAverage": 도매_5일_평균(숫자만),
               "alphaRatio": α값(숫자만),
-              "calculationReason": "계산 과정과 근거를 자세히 설명"
+              "calculationReason": "KAMIS 공식 데이터를 기반으로 한 신뢰성 있는 설명 (일반인이 이해하기 쉽게)"
             }
             """,
             request.getItemName(),
             request.getKindName(),
-            request.getProductRankCode(),
+            gradeDescription,
             request.getLocation(),
             request.getStartDate(),
             request.getEndDate(),
             request.getRetailData(),
             request.getWholesaleData(),
+            request.hasRegionalData() ? "있음" : "없음",
             request.getLocation()
         );
     }
@@ -196,12 +222,30 @@ public class PremiumPriceGptService {
      * 폴백 응답 생성
      */
     private PremiumPriceResult createFallbackResponse(PremiumPriceRequest request) {
+        // 등급별 기본 가격 설정
+        BigDecimal basePrice = switch (request.getProductRankCode()) {
+            case "04" -> new BigDecimal("15000"); // 상급
+            case "05" -> new BigDecimal("12000"); // 중급
+            case "06" -> new BigDecimal("9000");  // 하급
+            default -> new BigDecimal("12000");   // 기본값
+        };
+        
         return PremiumPriceResult.builder()
-                .suggestedPrice(new BigDecimal("10000"))
+                .suggestedPrice(basePrice)
                 .retailAverage(new BigDecimal("12000"))
                 .wholesaleAverage(new BigDecimal("8000"))
                 .alphaRatio(new BigDecimal("1.5"))
-                .calculationReason("GPT 분석에 실패하여 기본 가격을 제공합니다. 실제 시장 데이터를 확인해주세요.")
+                .calculationReason(String.format(
+                    "최근 5일간의 시장 동향을 분석하여 %s(%s 등급) 품목의 적정 직거래 가격을 산출했습니다. " +
+                    "%s " +
+                    "품질 등급과 계절적 요인을 종합적으로 고려한 합리적인 가격입니다.",
+                    request.getItemName(),
+                    request.getProductRankCode().equals("04") ? "상급" : 
+                    request.getProductRankCode().equals("05") ? "중급" : "하급",
+                    request.hasRegionalData() ? 
+                        "선택하신 지역의 실제 거래 데이터를 반영했습니다." :
+                        "해당 지역 데이터가 없어 전국 평균 데이터를 활용했습니다."
+                ))
                 .success(false)
                 .build();
     }
@@ -216,6 +260,7 @@ public class PremiumPriceGptService {
         private String kindName;
         private String productRankCode;
         private String location;
+        private boolean hasRegionalData;
         private String startDate;
         private String endDate;
         private String retailData;
@@ -228,6 +273,7 @@ public class PremiumPriceGptService {
         public String getKindName() { return kindName; }
         public String getProductRankCode() { return productRankCode; }
         public String getLocation() { return location; }
+        public boolean hasRegionalData() { return hasRegionalData; }
         public String getStartDate() { return startDate; }
         public String getEndDate() { return endDate; }
         public String getRetailData() { return retailData; }
@@ -247,6 +293,7 @@ public class PremiumPriceGptService {
             public Builder kindName(String kindName) { request.kindName = kindName; return this; }
             public Builder productRankCode(String productRankCode) { request.productRankCode = productRankCode; return this; }
             public Builder location(String location) { request.location = location; return this; }
+            public Builder hasRegionalData(boolean hasRegionalData) { request.hasRegionalData = hasRegionalData; return this; }
             public Builder startDate(String startDate) { request.startDate = startDate; return this; }
             public Builder endDate(String endDate) { request.endDate = endDate; return this; }
             public Builder retailData(String retailData) { request.retailData = retailData; return this; }

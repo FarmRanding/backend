@@ -57,15 +57,26 @@ public class PremiumPriceSuggestionServiceImpl implements PremiumPriceSuggestion
         log.info("KAMIS API 호출 파라미터: groupCode={}, itemCode={}, kindCode={}, baseDate={}", 
                 productCode.getGroupCode(), productCode.getItemCode(), kindCode, baseDate);
         
-        KamisApiService.KamisPriceResponse priceData = kamisApiService.fetch5DayPriceData(
+        // 등급 코드 설정 (요청에서 받은 값 사용, 없으면 기본값 04)
+        String rankCode = (request.productRankCode() != null && !request.productRankCode().isEmpty()) 
+                ? request.productRankCode() 
+                : "04";
+        
+        // 지역별 데이터 포함하여 KAMIS API 호출
+        KamisApiService.KamisPriceResponse priceData = kamisApiService.fetchBothPriceDataWithRegion(
                 productCode.getGroupCode(),
                 productCode.getItemCode(), // 실제 KAMIS 품목 코드 사용
                 kindCode, // 품종 코드 명시적 설정
-                "04", // 기본 등급 (중급)
-                baseDate // LocalDate 객체 전달
+                rankCode, // 요청받은 등급 코드 사용
+                baseDate.minusDays(4), // 시작일
+                baseDate, // 종료일
+                request.location() != null ? request.location() : "전국" // 지역 정보
         );
         
-        // 4. GPT를 통한 가격 분석 및 제안
+        // 3.1. KAMIS 데이터 유효성 검증
+        validateKamisData(priceData, productCode.getItemName());
+        
+        // 4. GPT를 통한 가격 분석 및 제안 (지역 데이터 존재 여부 포함)
         PremiumPriceGptService.PremiumPriceResult gptResult = generatePriceWithGpt(
                 request, productCode, priceData);
         
@@ -151,6 +162,27 @@ public class PremiumPriceSuggestionServiceImpl implements PremiumPriceSuggestion
     }
     
     /**
+     * KAMIS 데이터 유효성 검증
+     */
+    private void validateKamisData(KamisApiService.KamisPriceResponse priceData, String itemName) {
+        // 소매 데이터 검증
+        if (priceData.getRetailData() == null || priceData.getRetailData().trim().isEmpty() || 
+            "{}".equals(priceData.getRetailData().trim())) {
+            log.error("KAMIS 소매 데이터가 없음: itemName={}", itemName);
+            throw new BusinessException(FarmrandingResponseCode.KAMIS_DATA_NOT_AVAILABLE);
+        }
+        
+        // 도매 데이터 검증
+        if (priceData.getWholesaleData() == null || priceData.getWholesaleData().trim().isEmpty() || 
+            "{}".equals(priceData.getWholesaleData().trim())) {
+            log.error("KAMIS 도매 데이터가 없음: itemName={}", itemName);
+            throw new BusinessException(FarmrandingResponseCode.KAMIS_DATA_NOT_AVAILABLE);
+        }
+        
+        log.info("KAMIS 데이터 검증 완료: itemName={}", itemName);
+    }
+
+    /**
      * GPT를 통한 가격 분석 및 제안
      */
     private PremiumPriceGptService.PremiumPriceResult generatePriceWithGpt(
@@ -159,14 +191,19 @@ public class PremiumPriceSuggestionServiceImpl implements PremiumPriceSuggestion
             KamisApiService.KamisPriceResponse priceData) {
         
         String kindCode = request.productVarietyCode() != null ? request.productVarietyCode() : productCode.getKindCode();
+        String rankCode = (request.productRankCode() != null && !request.productRankCode().isEmpty()) 
+                ? request.productRankCode() 
+                : "04";
+        
         PremiumPriceGptService.PremiumPriceRequest gptRequest = 
                 PremiumPriceGptService.PremiumPriceRequest.builder()
                         .itemCode(request.productItemCode())
                         .itemName(productCode.getItemName())
                         .kindCode(kindCode)
                         .kindName(productCode.getKindName())
-                        .productRankCode("04") // 기본 등급 (중급)
+                        .productRankCode(rankCode) // 요청받은 등급 코드 사용
                         .location(request.location() != null ? request.location() : "전국")
+                        .hasRegionalData(priceData.hasRegionalData()) // 지역 데이터 존재 여부
                         .startDate(priceData.getStartDate().format(DATE_FORMATTER))
                         .endDate(priceData.getEndDate().format(DATE_FORMATTER))
                         .retailData(priceData.getRetailData())
