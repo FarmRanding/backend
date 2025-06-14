@@ -10,6 +10,11 @@ import jakarta.validation.constraints.Size;
 @Schema(description = "프리미엄 가격 제안 요청")
 public record PremiumPriceRequest(
         
+        @NotBlank(message = "품목명은 필수입니다.")
+        @Size(max = 100, message = "품목명은 100자 이하여야 합니다.")
+        @Schema(description = "품목명", example = "토마토", required = true)
+        String productName,
+        
         @Schema(description = "품목 그룹 코드 (사용하지 않음)", example = "", required = false)
         String productGroupCode,
         

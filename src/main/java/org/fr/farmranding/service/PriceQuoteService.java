@@ -4,6 +4,7 @@ import org.fr.farmranding.dto.pricequote.PriceQuoteCreateRequest;
 import org.fr.farmranding.dto.pricequote.PriceQuoteResponse;
 import org.fr.farmranding.dto.pricequote.PriceQuoteSaveRequest;
 import org.fr.farmranding.dto.pricequote.PriceQuoteUpdateRequest;
+import org.fr.farmranding.dto.pricequote.UnifiedPriceHistoryResponse;
 import org.fr.farmranding.entity.pricequote.PriceQuoteStatus;
 import org.fr.farmranding.entity.user.User;
 import org.springframework.data.domain.Page;
@@ -33,6 +34,11 @@ public interface PriceQuoteService {
      * 내 가격 견적 요청 목록 조회 (페이징)
      */
     Page<PriceQuoteResponse> getMyPriceQuotes(User currentUser, Pageable pageable);
+    
+    /**
+     * 통합된 가격 제안 이력 조회 (일반 + 프리미엄)
+     */
+    List<UnifiedPriceHistoryResponse> getUnifiedPriceHistory(User currentUser);
     
     /**
      * 상태별 가격 견적 요청 목록 조회

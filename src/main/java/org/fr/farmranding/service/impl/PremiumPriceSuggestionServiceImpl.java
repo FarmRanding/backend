@@ -198,7 +198,7 @@ public class PremiumPriceSuggestionServiceImpl implements PremiumPriceSuggestion
         PremiumPriceGptService.PremiumPriceRequest gptRequest = 
                 PremiumPriceGptService.PremiumPriceRequest.builder()
                         .itemCode(request.productItemCode())
-                        .itemName(productCode.getItemName())
+                        .itemName(request.productName() != null ? request.productName() : productCode.getItemName()) // 사용자 입력 품목명 우선 사용
                         .kindCode(kindCode)
                         .kindName(productCode.getKindName())
                         .productRankCode(rankCode) // 요청받은 등급 코드 사용
@@ -231,12 +231,17 @@ public class PremiumPriceSuggestionServiceImpl implements PremiumPriceSuggestion
         );
         
         String kindCode = request.productVarietyCode() != null ? request.productVarietyCode() : productCode.getKindCode();
+        String rankCode = (request.productRankCode() != null && !request.productRankCode().isEmpty()) 
+                ? request.productRankCode() 
+                : "04";
+        
         PremiumPriceSuggestion entity = PremiumPriceSuggestion.builder()
                 .user(currentUser)
                 .itemCategoryCode(productCode.getGroupCode())
-                .itemCode(request.productItemCode())
+                .itemCode(productCode.getItemCode()) // 실제 KAMIS 품목 코드 사용
+                .itemName(request.productName() != null ? request.productName() : productCode.getItemName()) // 사용자가 입력한 품목명 우선 사용
                 .kindCode(kindCode)
-                .productRankCode("04") // 기본 등급 (중급)
+                .productRankCode(rankCode) // 요청받은 등급 코드 사용
                 .location(request.location())
                 .startDate(priceData.getStartDate())
                 .endDate(priceData.getEndDate())

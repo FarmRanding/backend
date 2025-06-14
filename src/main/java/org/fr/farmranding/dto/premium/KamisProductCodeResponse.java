@@ -70,4 +70,4 @@ record KamisProductGroupResponse(
         
         @Schema(description = "그룹명", example = "식량작물")
         String groupName
-) {} 
+) {}

@@ -52,4 +52,4 @@ public interface KamisProductCodeRepository extends JpaRepository<KamisProductCo
      * 상위 50개 품목 조회 (품목명 순)
      */
     List<KamisProductCode> findTop50ByOrderByItemNameAsc();
-} 
+}

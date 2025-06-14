@@ -49,6 +49,9 @@ public record PremiumPriceResponse(
             @Schema(description = "품목 코드", example = "241")
             String itemCode,
             
+            @Schema(description = "품목명", example = "토마토")
+            String itemName,
+            
             @Schema(description = "품종 코드", example = "00")
             String kindCode,
             
@@ -82,6 +85,7 @@ public record PremiumPriceResponse(
                 new ProductInfo(
                         entity.getItemCategoryCode(),
                         entity.getItemCode(),
+                        entity.getItemName(),
                         entity.getKindCode(),
                         entity.getProductRankCode(),
                         entity.getLocation()
@@ -93,4 +97,4 @@ public record PremiumPriceResponse(
                 entity.getCreatedAt()
         );
     }
-} 
+}

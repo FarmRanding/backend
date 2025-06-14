@@ -32,6 +32,9 @@ public class PremiumPriceSuggestion extends BaseEntity {
     @Column(name = "item_code", nullable = false, length = 10)
     private String itemCode;
     
+    @Column(name = "item_name", nullable = false, length = 100)
+    private String itemName;
+    
     @Column(name = "kind_code", nullable = false, length = 10)
     private String kindCode;
     

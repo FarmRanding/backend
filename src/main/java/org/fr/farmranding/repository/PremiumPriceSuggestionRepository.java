@@ -42,4 +42,4 @@ public interface PremiumPriceSuggestionRepository extends JpaRepository<PremiumP
            "ORDER BY p.createdAt DESC")
     List<PremiumPriceSuggestion> findByDateRange(@Param("fromDate") LocalDate fromDate, 
                                                 @Param("toDate") LocalDate toDate);
-} 
+}

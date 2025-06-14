@@ -25,4 +25,4 @@ public interface PremiumPriceSuggestionService {
      * 특정 프리미엄 가격 제안 상세 조회
      */
     PremiumPriceResponse getPremiumPriceSuggestionById(Long suggestionId, User currentUser);
-} 
+}

@@ -4,14 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.fr.farmranding.common.exception.BusinessException;
 import org.fr.farmranding.common.code.FarmrandingResponseCode;
-import org.fr.farmranding.dto.pricequote.PriceQuoteCreateRequest;
-import org.fr.farmranding.dto.pricequote.PriceQuoteResponse;
-import org.fr.farmranding.dto.pricequote.PriceQuoteSaveRequest;
-import org.fr.farmranding.dto.pricequote.PriceQuoteUpdateRequest;
+import org.fr.farmranding.dto.pricequote.*;
 import org.fr.farmranding.entity.pricequote.PriceQuoteRequest;
 import org.fr.farmranding.entity.pricequote.PriceQuoteStatus;
+import org.fr.farmranding.entity.pricing.PremiumPriceSuggestion;
 import org.fr.farmranding.entity.user.User;
 import org.fr.farmranding.repository.PriceQuoteRequestRepository;
+import org.fr.farmranding.repository.PremiumPriceSuggestionRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -28,6 +29,7 @@ import java.util.List;
 public class PriceQuoteServiceImpl implements PriceQuoteService {
     
     private final PriceQuoteRequestRepository priceQuoteRequestRepository;
+    private final PremiumPriceSuggestionRepository premiumPriceSuggestionRepository;
     
     @Override
     public PriceQuoteResponse createPriceQuote(PriceQuoteCreateRequest request, User currentUser) {
@@ -43,8 +45,6 @@ public class PriceQuoteServiceImpl implements PriceQuoteService {
                 .productName(request.productName())
                 .grade(request.grade())
                 .harvestDate(request.harvestDate())
-                .unit(request.unit())
-                .quantity(request.quantity())
                 .estimatedPrice(request.estimatedPrice())
                 .status(PriceQuoteStatus.DRAFT)
                 .build();
@@ -73,6 +73,33 @@ public class PriceQuoteServiceImpl implements PriceQuoteService {
     public Page<PriceQuoteResponse> getMyPriceQuotes(User currentUser, Pageable pageable) {
         Page<PriceQuoteRequest> priceQuotes = priceQuoteRequestRepository.findByUserId(currentUser.getId(), pageable);
         return priceQuotes.map(PriceQuoteResponse::from);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<UnifiedPriceHistoryResponse> getUnifiedPriceHistory(User currentUser) {
+        List<UnifiedPriceHistoryResponse> unifiedHistory = new ArrayList<>();
+        
+        // 일반 가격 제안 조회
+        List<PriceQuoteRequest> standardQuotes = priceQuoteRequestRepository.findByUserId(currentUser.getId());
+        for (PriceQuoteRequest quote : standardQuotes) {
+            unifiedHistory.add(UnifiedPriceHistoryResponse.fromStandard(quote));
+        }
+        
+        // 프리미엄 가격 제안 조회
+        List<PremiumPriceSuggestion> premiumSuggestions = premiumPriceSuggestionRepository.findByUserIdOrderByCreatedAtDesc(
+                currentUser.getId(), 
+                Pageable.unpaged()
+        ).getContent();
+        
+        for (PremiumPriceSuggestion suggestion : premiumSuggestions) {
+            unifiedHistory.add(UnifiedPriceHistoryResponse.fromPremium(suggestion));
+        }
+        
+        // 생성일시 기준 최신순 정렬
+        unifiedHistory.sort(Comparator.comparing(UnifiedPriceHistoryResponse::createdAt).reversed());
+        
+        return unifiedHistory;
     }
     
     @Override

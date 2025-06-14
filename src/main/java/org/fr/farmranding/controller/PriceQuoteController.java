@@ -12,6 +12,7 @@ import org.fr.farmranding.common.dto.FarmrandingResponseBody;
 import org.fr.farmranding.dto.pricequote.PriceQuoteCreateRequest;
 import org.fr.farmranding.dto.pricequote.PriceQuoteResponse;
 import org.fr.farmranding.dto.pricequote.PriceQuoteSaveRequest;
+import org.fr.farmranding.dto.pricequote.UnifiedPriceHistoryResponse;
 import org.fr.farmranding.entity.user.User;
 import org.fr.farmranding.service.PriceQuoteService;
 import org.springframework.http.HttpStatus;
@@ -72,6 +73,19 @@ public class PriceQuoteController {
             @CurrentUser User currentUser) {
         
         List<PriceQuoteResponse> responses = priceQuoteService.getMyPriceQuotes(currentUser);
+        return ResponseEntity.ok(FarmrandingResponseBody.success(responses));
+    }
+    
+    @Operation(summary = "통합 가격 제안 이력 조회", description = "일반 가격 제안과 프리미엄 가격 제안을 통합하여 조회합니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "조회 성공"),
+        @ApiResponse(responseCode = "401", description = "인증 실패")
+    })
+    @GetMapping("/unified-history")
+    public ResponseEntity<FarmrandingResponseBody<List<UnifiedPriceHistoryResponse>>> getUnifiedPriceHistory(
+            @CurrentUser User currentUser) {
+        
+        List<UnifiedPriceHistoryResponse> responses = priceQuoteService.getUnifiedPriceHistory(currentUser);
         return ResponseEntity.ok(FarmrandingResponseBody.success(responses));
     }
     
