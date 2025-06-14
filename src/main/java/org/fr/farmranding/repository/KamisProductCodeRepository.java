@@ -47,4 +47,9 @@ public interface KamisProductCodeRepository extends JpaRepository<KamisProductCo
            "ORDER BY k.itemName, k.kindName")
     List<KamisProductCode> findByItemOrKindNameContaining(@Param("itemName") String itemName, 
                                                           @Param("kindName") String kindName);
+    
+    /**
+     * 상위 50개 품목 조회 (품목명 순)
+     */
+    List<KamisProductCode> findTop50ByOrderByItemNameAsc();
 } 

@@ -1,5 +1,9 @@
 package org.fr.farmranding.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.fr.farmranding.auth.CurrentUser;
 import org.fr.farmranding.common.dto.FarmrandingResponseBody;
@@ -71,7 +75,7 @@ public class PremiumPriceController implements PremiumPriceApi {
     @Override
     public ResponseEntity<FarmrandingResponseBody<List<KamisProductCodeResponse>>> searchProductCodes(
             @CurrentUser User currentUser,
-            @RequestParam String keyword) {
+            @RequestParam(value = "keyword") String keyword) {
         
         List<KamisProductCode> products = kamisProductCodeRepository
                 .findByItemNameContainingIgnoreCaseOrderByItemNameAsc(keyword);
@@ -106,7 +110,7 @@ public class PremiumPriceController implements PremiumPriceApi {
     @Override
     public ResponseEntity<FarmrandingResponseBody<List<KamisProductCodeResponse>>> getProductVarieties(
             @CurrentUser User currentUser,
-            @RequestParam String itemCode) {
+            @RequestParam(value = "itemCode") String itemCode) {
         
         List<KamisProductCode> varieties = kamisProductCodeRepository
                 .findByItemCodeOrderByKindNameAsc(itemCode);
@@ -114,5 +118,63 @@ public class PremiumPriceController implements PremiumPriceApi {
         List<KamisProductCodeResponse> responses = KamisProductCodeResponse.fromList(varieties);
         
         return ResponseEntity.ok(FarmrandingResponseBody.success(responses));
+    }
+
+    /**
+     * KAMIS 품목 코드 조회
+     */
+    @GetMapping("/kamis-products")
+    @Operation(summary = "KAMIS 품목 코드 조회", description = "검색어로 KAMIS 품목 코드를 조회합니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "조회 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
+    public ResponseEntity<FarmrandingResponseBody<List<KamisProductDto>>> getKamisProducts(
+            @RequestParam(value = "search", required = false) String search) {
+        
+        List<KamisProductCode> products;
+        
+        if (search != null && !search.trim().isEmpty()) {
+            // 검색어가 있으면 품목명으로 검색
+            products = kamisProductCodeRepository
+                    .findByItemNameContainingIgnoreCaseOrderByItemNameAsc(search.trim());
+        } else {
+            // 검색어가 없으면 전체 조회 (최대 50개)
+            products = kamisProductCodeRepository
+                    .findTop50ByOrderByItemNameAsc();
+        }
+        
+        List<KamisProductDto> result = products.stream()
+                .map(KamisProductDto::from)
+                .toList();
+        
+        return ResponseEntity.ok(FarmrandingResponseBody.success(result));
+    }
+
+    /**
+     * KAMIS 품목 코드 DTO
+     */
+    @Schema(description = "KAMIS 품목 코드 정보")
+    public record KamisProductDto(
+            @Schema(description = "품목 코드", example = "245")
+            String itemCode,
+            
+            @Schema(description = "품목명", example = "양파")
+            String itemName,
+            
+            @Schema(description = "품종 코드", example = "00")
+            String kindCode,
+            
+            @Schema(description = "품종명", example = "양파")
+            String kindName
+    ) {
+        public static KamisProductDto from(KamisProductCode entity) {
+            return new KamisProductDto(
+                    entity.getItemCode(),
+                    entity.getItemName(),
+                    entity.getKindCode(),
+                    entity.getKindName()
+            );
+        }
     }
 } 
