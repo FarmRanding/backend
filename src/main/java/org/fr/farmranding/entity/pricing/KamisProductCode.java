@@ -37,3 +37,4 @@ public class KamisProductCode extends BaseEntity {
     @Column(name = "kind_name", nullable = false, length = 50)
     private String kindName;
 }
+ 

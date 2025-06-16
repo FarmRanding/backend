@@ -2,6 +2,8 @@ package org.fr.farmranding.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.fr.farmranding.common.exception.BusinessException;
+import org.fr.farmranding.common.code.FarmrandingResponseCode;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -47,8 +49,8 @@ public class PremiumPriceGptService {
         } catch (Exception e) {
             log.error("프리미엄 가격 제안 GPT 요청 실패: {}", e.getMessage(), e);
             
-            // 폴백 응답 생성
-            return createFallbackResponse(request);
+            // BusinessException으로 변경
+            throw new BusinessException(FarmrandingResponseCode.AI_SERVICE_ERROR);
         }
     }
     
@@ -60,7 +62,6 @@ public class PremiumPriceGptService {
         String gradeDescription = switch (request.getProductRankCode()) {
             case "04" -> "상급 (최고 품질)";
             case "05" -> "중급 (일반 품질)";
-            case "06" -> "하급 (저급 품질)";
             default -> "중급 (일반 품질)";
         };
         
@@ -76,7 +77,7 @@ public class PremiumPriceGptService {
             - 품종명: %s
             - 등급: %s
             - 거래 위치: %s
-            - 조회 기간: %s ~ %s
+            - 분석 기간: 작년 동일날짜 앞뒤 기준 %s ~ %s (5일간)
             
             ## 소매 가격 데이터 (p_productclscode=01)
             %s
@@ -88,7 +89,7 @@ public class PremiumPriceGptService {
             1. 지역 데이터 존재 여부: %s
             2. 위 데이터에서 거래 위치(%s)와 일치하는 지역 데이터가 있으면 해당 값을 우선 사용하세요.
             3. 해당 지역 데이터가 없으면 전국 평균값을 사용하여 계산하세요.
-            4. 소매/도매 각각의 5일 평균 가격을 계산하세요.
+            4. 작년 동일한 시기 앞뒤 5일간의 소매/도매 각각 평균 가격을 계산하세요.
             5. 위 공식을 정확히 적용하여 최종 직거래 제안가를 계산하세요.
             6. calculationReason은 일반인이 이해하기 쉽고 신뢰성을 느낄 수 있도록 작성하세요.
             7. kamis 공식 데이터를 사용했다는 문구는 이미 존재하므로 별도로 언급하지 마세요.
@@ -106,7 +107,8 @@ public class PremiumPriceGptService {
               * "요즘 시장에서 ~해요", "이 정도면 괜찮을 것 같아요"
               * "소매가가 높아서", "도매가 대비 ~배 정도"
               * "지금 시세를 보니", "이런 이유로 추천해요"
-            - **예시 톤**: "최근 5일 동안 마트에서 1,500원, 도매시장에서 800원 정도에 거래되고 있어요. 소매가가 도매가보다 거의 2배 가까이 높은 상황이라, 직거래로는 960원 정도가 적당할 것 같아요. 너무 비싸지도 않고 농부님께도 손해 안 되는 선이거든요."
+            - **예시 톤**: "작년 같은 시기 마트에서 1,500원, 도매시장에서 800원 정도에 거래됐었어요. 소매가가 도매가보다 거의 2배 가까이 높았던 상황이라, 직거래로는 960원 정도가 적당할 것 같아요. 너무 비싸지도 않고 농부님께도 손해 안 되는 선이거든요."
+            - **창의성"": 예시는 예시일 뿐이지, 항상 그런 형식을 따르지는 말고 적절한 창의를 발휘하여 설명 작성해
             
             ## 응답 형식 (JSON)
             반드시 아래 JSON 형식으로만 응답해주세요:
@@ -136,6 +138,18 @@ public class PremiumPriceGptService {
      */
     private PremiumPriceResult parseGptResponse(String gptResponse, PremiumPriceRequest request) {
         try {
+            // 먼저 에러 패턴 체크
+            String responseLower = gptResponse.toLowerCase();
+            if (responseLower.contains("죄송하지만") || 
+                responseLower.contains("제공된 데이터") || 
+                responseLower.contains("구체적인 숫자가 포함되어 있지 않아") ||
+                responseLower.contains("정확한 계산을 수행할 수 없습니다") ||
+                responseLower.contains("데이터가 없") ||
+                responseLower.contains("분석할 수 없")) {
+                log.error("GPT에서 데이터 부족 응답: response={}", gptResponse);
+                throw new BusinessException(FarmrandingResponseCode.KAMIS_DATA_NOT_AVAILABLE);
+            }
+            
             // JSON 추출 (```json 감싸진 경우 처리)
             String jsonContent = extractJsonFromResponse(gptResponse);
             
@@ -145,6 +159,15 @@ public class PremiumPriceGptService {
             BigDecimal wholesaleAverage = extractBigDecimalValue(jsonContent, "wholesaleAverage");
             BigDecimal alphaRatio = extractBigDecimalValue(jsonContent, "alphaRatio");
             String calculationReason = extractStringValue(jsonContent, "calculationReason");
+            
+            // 추출된 값들이 유효한지 검증
+            if (suggestedPrice.compareTo(BigDecimal.ZERO) <= 0 || 
+                retailAverage.compareTo(BigDecimal.ZERO) <= 0 || 
+                wholesaleAverage.compareTo(BigDecimal.ZERO) <= 0) {
+                log.error("GPT 응답에서 유효하지 않은 가격 데이터: suggestedPrice={}, retailAverage={}, wholesaleAverage={}", 
+                    suggestedPrice, retailAverage, wholesaleAverage);
+                throw new BusinessException(FarmrandingResponseCode.KAMIS_DATA_NOT_AVAILABLE);
+            }
             
             return PremiumPriceResult.builder()
                     .suggestedPrice(suggestedPrice)
@@ -157,7 +180,7 @@ public class PremiumPriceGptService {
                     
         } catch (Exception e) {
             log.error("GPT 응답 파싱 실패: {}, 응답: {}", e.getMessage(), gptResponse);
-            return createFallbackResponse(request);
+            throw new BusinessException(FarmrandingResponseCode.AI_SERVICE_ERROR);
         }
     }
     
@@ -216,38 +239,6 @@ public class PremiumPriceGptService {
         }
         
         return response;
-    }
-    
-    /**
-     * 폴백 응답 생성
-     */
-    private PremiumPriceResult createFallbackResponse(PremiumPriceRequest request) {
-        // 등급별 기본 가격 설정
-        BigDecimal basePrice = switch (request.getProductRankCode()) {
-            case "04" -> new BigDecimal("15000"); // 상급
-            case "05" -> new BigDecimal("12000"); // 중급
-            case "06" -> new BigDecimal("9000");  // 하급
-            default -> new BigDecimal("12000");   // 기본값
-        };
-        
-        return PremiumPriceResult.builder()
-                .suggestedPrice(basePrice)
-                .retailAverage(new BigDecimal("12000"))
-                .wholesaleAverage(new BigDecimal("8000"))
-                .alphaRatio(new BigDecimal("1.5"))
-                .calculationReason(String.format(
-                    "최근 5일간의 시장 동향을 분석하여 %s(%s 등급) 품목의 적정 직거래 가격을 산출했습니다. " +
-                    "%s " +
-                    "품질 등급과 계절적 요인을 종합적으로 고려한 합리적인 가격입니다.",
-                    request.getItemName(),
-                    request.getProductRankCode().equals("04") ? "상급" : 
-                    request.getProductRankCode().equals("05") ? "중급" : "하급",
-                    request.hasRegionalData() ? 
-                        "선택하신 지역의 실제 거래 데이터를 반영했습니다." :
-                        "해당 지역 데이터가 없어 전국 평균 데이터를 활용했습니다."
-                ))
-                .success(false)
-                .build();
     }
     
     /**

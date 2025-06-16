@@ -165,6 +165,17 @@ public class PremiumPriceSuggestionServiceImpl implements PremiumPriceSuggestion
      * KAMIS 데이터 유효성 검증
      */
     private void validateKamisData(KamisApiService.KamisPriceResponse priceData, String itemName) {
+        // KAMIS API에서 "001" (데이터 없음) 응답 체크
+        if (priceData.getRetailData() != null && priceData.getRetailData().contains("\"001\"")) {
+            log.error("KAMIS에서 소매 데이터 없음 응답: itemName={}", itemName);
+            throw new BusinessException(FarmrandingResponseCode.KAMIS_DATA_NOT_AVAILABLE);
+        }
+        
+        if (priceData.getWholesaleData() != null && priceData.getWholesaleData().contains("\"001\"")) {
+            log.error("KAMIS에서 도매 데이터 없음 응답: itemName={}", itemName);
+            throw new BusinessException(FarmrandingResponseCode.KAMIS_DATA_NOT_AVAILABLE);
+        }
+        
         // 소매 데이터 검증
         if (priceData.getRetailData() == null || priceData.getRetailData().trim().isEmpty() || 
             "{}".equals(priceData.getRetailData().trim())) {
@@ -210,6 +221,7 @@ public class PremiumPriceSuggestionServiceImpl implements PremiumPriceSuggestion
                         .wholesaleData(priceData.getWholesaleData())
                         .build();
         
+        // PremiumPriceGptService에서 이미 에러 체크를 하므로 여기서는 단순히 호출만
         return premiumPriceGptService.generatePremiumPrice(gptRequest);
     }
     

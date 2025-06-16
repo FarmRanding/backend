@@ -68,3 +68,4 @@ public class PremiumPriceSuggestion extends BaseEntity {
     @Column(name = "raw_data", columnDefinition = "TEXT")
     private String rawData;
 } 
+ 

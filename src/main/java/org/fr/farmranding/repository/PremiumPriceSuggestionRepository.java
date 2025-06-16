@@ -43,3 +43,4 @@ public interface PremiumPriceSuggestionRepository extends JpaRepository<PremiumP
     List<PremiumPriceSuggestion> findByDateRange(@Param("fromDate") LocalDate fromDate, 
                                                 @Param("toDate") LocalDate toDate);
 }
+ 

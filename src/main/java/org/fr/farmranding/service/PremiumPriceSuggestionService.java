@@ -26,3 +26,4 @@ public interface PremiumPriceSuggestionService {
      */
     PremiumPriceResponse getPremiumPriceSuggestionById(Long suggestionId, User currentUser);
 }
+ 
