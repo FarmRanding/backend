@@ -120,4 +120,22 @@ public class PriceQuoteController {
         priceQuoteService.deletePriceQuote(priceQuoteId, currentUser);
         return ResponseEntity.noContent().build();
     }
+    
+    @Operation(summary = "통합 가격 제안 삭제", description = "일반/프리미엄 가격 제안을 통합 삭제합니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "삭제 성공"),
+        @ApiResponse(responseCode = "401", description = "인증 실패"),
+        @ApiResponse(responseCode = "404", description = "제안을 찾을 수 없음")
+    })
+    @DeleteMapping("/unified/{id}")
+    public ResponseEntity<Void> deleteUnifiedPriceQuote(
+            @CurrentUser User currentUser,
+            @Parameter(description = "가격 제안 ID", example = "1")
+            @PathVariable("id") Long id,
+            @Parameter(description = "가격 제안 타입", example = "STANDARD")
+            @RequestParam("type") String type) {
+        
+        priceQuoteService.deleteUnifiedPriceQuote(id, type, currentUser);
+        return ResponseEntity.noContent().build();
+    }
 } 

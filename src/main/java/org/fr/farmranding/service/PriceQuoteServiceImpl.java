@@ -151,6 +151,34 @@ public class PriceQuoteServiceImpl implements PriceQuoteService {
     }
     
     @Override
+    public void deleteUnifiedPriceQuote(Long id, String type, User currentUser) {
+        if ("STANDARD".equals(type)) {
+            // 일반 가격 제안 삭제
+            PriceQuoteRequest priceQuote = priceQuoteRequestRepository.findByIdAndUserId(id, currentUser.getId())
+                    .orElseThrow(() -> new BusinessException(FarmrandingResponseCode.PRICE_QUOTE_NOT_FOUND));
+            
+            priceQuoteRequestRepository.delete(priceQuote);
+            log.info("일반 가격 견적 삭제 완료 - 사용자: {}, ID: {}", currentUser.getId(), id);
+            
+        } else if ("PREMIUM".equals(type)) {
+            // 프리미엄 가격 제안 삭제
+            PremiumPriceSuggestion premiumSuggestion = premiumPriceSuggestionRepository.findById(id)
+                    .orElseThrow(() -> new BusinessException(FarmrandingResponseCode.PREMIUM_PRICE_SUGGESTION_NOT_FOUND));
+            
+            // 소유자 확인
+            if (!premiumSuggestion.getUser().getId().equals(currentUser.getId())) {
+                throw new BusinessException(FarmrandingResponseCode.PREMIUM_PRICE_SUGGESTION_ACCESS_DENIED);
+            }
+            
+            premiumPriceSuggestionRepository.delete(premiumSuggestion);
+            log.info("프리미엄 가격 견적 삭제 완료 - 사용자: {}, ID: {}", currentUser.getId(), id);
+            
+        } else {
+            throw new BusinessException(FarmrandingResponseCode.VALIDATION_ERROR);
+        }
+    }
+    
+    @Override
     public PriceQuoteResponse startAnalysis(Long priceQuoteId, User currentUser) {
         PriceQuoteRequest priceQuote = findPriceQuoteByIdAndUser(priceQuoteId, currentUser);
         

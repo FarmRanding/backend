@@ -61,6 +61,11 @@ public interface PriceQuoteService {
     void deletePriceQuote(Long priceQuoteId, User currentUser);
     
     /**
+     * 통합 가격 제안 삭제 (일반 + 프리미엄)
+     */
+    void deleteUnifiedPriceQuote(Long id, String type, User currentUser);
+    
+    /**
      * 가격 분석 시작
      */
     PriceQuoteResponse startAnalysis(Long priceQuoteId, User currentUser);
