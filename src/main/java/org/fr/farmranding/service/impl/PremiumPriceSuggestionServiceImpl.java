@@ -48,14 +48,18 @@ public class PremiumPriceSuggestionServiceImpl implements PremiumPriceSuggestion
         // 2. 품목 정보 조회 및 검증
         KamisProductCode productCode = validateAndGetProductCode(request);
         
-        // 3. KAMIS API에서 5일간 가격 데이터 조회
-        LocalDate baseDate = LocalDate.parse(request.date(), DATE_FORMATTER);
+        // 3. KAMIS API에서 5일간 가격 데이터 조회 (사용자 선택 날짜 기준 작년 동일 시기)
+        LocalDate userSelectedDate = LocalDate.parse(request.date(), DATE_FORMATTER);
+        LocalDate centerDate = userSelectedDate.minusYears(1); // 작년 동일 날짜
+        LocalDate startDate = centerDate.minusDays(2); // 중심 날짜 - 2일
+        LocalDate endDate = centerDate.plusDays(2);   // 중심 날짜 + 2일
+        
         String kindCode = (request.productVarietyCode() != null && !request.productVarietyCode().isEmpty()) 
                 ? request.productVarietyCode() 
                 : productCode.getKindCode();
         
-        log.info("KAMIS API 호출 파라미터: groupCode={}, itemCode={}, kindCode={}, baseDate={}", 
-                productCode.getGroupCode(), productCode.getItemCode(), kindCode, baseDate);
+        log.info("KAMIS API 호출 파라미터: groupCode={}, itemCode={}, kindCode={}, userSelectedDate={}, centerDate={}, 조회기간={} ~ {}", 
+                productCode.getGroupCode(), productCode.getItemCode(), kindCode, userSelectedDate, centerDate, startDate, endDate);
         
         // 등급 코드 설정 (요청에서 받은 값 사용, 없으면 기본값 04)
         String rankCode = (request.productRankCode() != null && !request.productRankCode().isEmpty()) 
@@ -68,8 +72,8 @@ public class PremiumPriceSuggestionServiceImpl implements PremiumPriceSuggestion
                 productCode.getItemCode(), // 실제 KAMIS 품목 코드 사용
                 kindCode, // 품종 코드 명시적 설정
                 rankCode, // 요청받은 등급 코드 사용
-                baseDate.minusDays(4), // 시작일
-                baseDate, // 종료일
+                startDate, // 중심날짜 - 2일
+                endDate,   // 중심날짜 + 2일
                 request.location() != null ? request.location() : "전국" // 지역 정보
         );
         

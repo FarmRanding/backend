@@ -96,6 +96,7 @@ public class PremiumPriceGptService {
             
             ## calculationReason 작성 가이드라인
             - **자연스러운 대화체**: 농부와 대화하듯 친근하고 쉬운 말로 설명
+            - **지역 언급**: 만약 주어진 지역 데이터를 사용했으면 해당 지역을 언급하고, 해당 지역 데이터가 존재하지 않아 전국 데이터를 사용했다면 전국 데이터를 사용했다고 언급하세요.
             - **핵심만 간단히**: 복잡한 수식 대신 "왜 이 가격인지" 이유를 쉽게 설명
             - **실용적 관점**: 시장 상황과 판매 전략 관점에서 설명
             - **창의적 표현**: 매번 다른 방식으로 설명하되, 이해하기 쉽게
@@ -107,6 +108,7 @@ public class PremiumPriceGptService {
               * "요즘 시장에서 ~해요", "이 정도면 괜찮을 것 같아요"
               * "소매가가 높아서", "도매가 대비 ~배 정도"
               * "지금 시세를 보니", "이런 이유로 추천해요"
+              * 반말 사용 금지
             - **예시 톤**: "작년 같은 시기 마트에서 1,500원, 도매시장에서 800원 정도에 거래됐었어요. 소매가가 도매가보다 거의 2배 가까이 높았던 상황이라, 직거래로는 960원 정도가 적당할 것 같아요. 너무 비싸지도 않고 농부님께도 손해 안 되는 선이거든요."
             - **창의성"": 예시는 예시일 뿐이지, 항상 그런 형식을 따르지는 말고 적절한 창의를 발휘하여 설명 작성해
             
@@ -222,12 +224,31 @@ public class PremiumPriceGptService {
      * 응답에서 JSON 부분만 추출
      */
     private String extractJsonFromResponse(String response) {
+        log.debug("원본 GPT 응답: {}", response);
+        
         // ```json으로 감싸진 경우 처리
         if (response.contains("```json")) {
             int start = response.indexOf("```json") + 7;
             int end = response.indexOf("```", start);
             if (end > start) {
-                return response.substring(start, end).trim();
+                String extracted = response.substring(start, end).trim();
+                log.debug("```json 방식으로 추출된 JSON: {}", extracted);
+                return extracted;
+            }
+        }
+        
+        // ```로만 감싸진 경우 처리
+        if (response.contains("```")) {
+            int start = response.indexOf("```") + 3;
+            int end = response.indexOf("```", start);
+            if (end > start) {
+                String content = response.substring(start, end).trim();
+                // json으로 시작하면 제거
+                if (content.startsWith("json")) {
+                    content = content.substring(4).trim();
+                }
+                log.debug("``` 방식으로 추출된 JSON: {}", content);
+                return content;
             }
         }
         
@@ -235,9 +256,12 @@ public class PremiumPriceGptService {
         int start = response.indexOf("{");
         int end = response.lastIndexOf("}");
         if (start >= 0 && end > start) {
-            return response.substring(start, end + 1);
+            String extracted = response.substring(start, end + 1);
+            log.debug("{} 방식으로 추출된 JSON: {}", extracted);
+            return extracted;
         }
         
+        log.debug("JSON 추출 실패, 원본 반환: {}", response);
         return response;
     }
     
