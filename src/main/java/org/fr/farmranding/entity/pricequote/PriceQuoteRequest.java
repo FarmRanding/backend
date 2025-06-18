@@ -24,12 +24,15 @@ public class PriceQuoteRequest extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
     
-    // 작물 정보
-    @Column(name = "crop_name", nullable = false)
-    private String cropName;
+    // 품목 정보 (ProductCode 연동)
+    @Column(name = "product_id")
+    private Long productId;
     
-    @Column(name = "variety")
-    private String variety;
+    @Column(name = "garak_code", nullable = false, length = 20)
+    private String garakCode;
+    
+    @Column(name = "product_name", nullable = false, length = 100)
+    private String productName;
     
     @Column(name = "grade", nullable = false)
     private String grade;
@@ -74,18 +77,35 @@ public class PriceQuoteRequest extends BaseEntity {
     @Column(name = "final_price", precision = 10, scale = 2)
     private BigDecimal finalPrice;
     
+    // 5년간 가격 추이 데이터 (JSON 형태로 저장)
+    @Column(name = "yearly_price_data", columnDefinition = "TEXT")
+    private String yearlyPriceData;
+    
+    // 최대/최소 가격 정보 (차트에서 사용)
+    @Column(name = "chart_min_price", precision = 10, scale = 2)
+    private BigDecimal chartMinPrice;
+    
+    @Column(name = "chart_max_price", precision = 10, scale = 2)
+    private BigDecimal chartMaxPrice;
+    
+    // 조회 기준일 정보
+    @Column(name = "lookup_date")
+    private LocalDate lookupDate;
+    
     // 비즈니스 메서드
-    public void updateBasicInfo(String cropName, String variety, String grade, LocalDate harvestDate, BigDecimal estimatedPrice) {
-        this.cropName = cropName;
-        this.variety = variety;
+    public void updateBasicInfo(Long productId, String garakCode, String productName, String grade, LocalDate harvestDate, BigDecimal estimatedPrice) {
+        this.productId = productId;
+        this.garakCode = garakCode;
+        this.productName = productName;
         this.grade = grade;
         this.harvestDate = harvestDate;
         this.estimatedPrice = estimatedPrice;
     }
     
-    public void updateBasicInfo(String cropName, String variety, String grade, LocalDate harvestDate, String unit, Integer quantity) {
-        this.cropName = cropName;
-        this.variety = variety;
+    public void updateBasicInfo(Long productId, String garakCode, String productName, String grade, LocalDate harvestDate, String unit, Integer quantity) {
+        this.productId = productId;
+        this.garakCode = garakCode;
+        this.productName = productName;
         this.grade = grade;
         this.harvestDate = harvestDate;
         this.unit = unit;
@@ -104,10 +124,21 @@ public class PriceQuoteRequest extends BaseEntity {
         this.status = status;
     }
     
-    public void completeAnalysis(BigDecimal finalPrice, String analysisResult) {
+    public void updatePriceAnalysisComplete(BigDecimal finalPrice, BigDecimal minPrice, BigDecimal maxPrice, 
+                                          BigDecimal avgPrice, String yearlyPriceData, String analysisResult) {
         this.finalPrice = finalPrice;
+        this.minPrice = minPrice;
+        this.maxPrice = maxPrice;
+        this.avgPrice = avgPrice;
+        this.chartMinPrice = minPrice;
+        this.chartMaxPrice = maxPrice;
+        this.yearlyPriceData = yearlyPriceData;
         this.analysisResult = analysisResult;
         this.status = PriceQuoteStatus.COMPLETED;
+    }
+    
+    public void updateLookupDate(LocalDate lookupDate) {
+        this.lookupDate = lookupDate;
     }
     
     public boolean canEdit() {

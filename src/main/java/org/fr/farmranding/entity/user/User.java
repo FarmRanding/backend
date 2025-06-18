@@ -54,8 +54,22 @@ public class User extends BaseEntity {
     }
 
     
-    public void upgradeToProMembership() {
-        this.membershipType = MembershipType.PRO;
+    public void upgradeToPremiumMembership() {
+        this.membershipType = MembershipType.PREMIUM;
+    }
+    
+    public void upgradeToPremiumPlusMembership() {
+        this.membershipType = MembershipType.PREMIUM_PLUS;
+    }
+    
+    public void downgradeToPremiumMembership() {
+        this.membershipType = MembershipType.PREMIUM;
+    }
+    
+    public void downgradeToFreeMembership() {
+        this.membershipType = MembershipType.FREE;
+        // 다운그레이드 시 사용량 카운트 초기화
+        resetUsageCounts();
     }
     
     public void incrementAiBrandingUsage() {
@@ -67,14 +81,14 @@ public class User extends BaseEntity {
     }
     
     public boolean canUseAiBranding() {
-        if (membershipType == MembershipType.PRO) {
+        if (membershipType == MembershipType.PREMIUM || membershipType == MembershipType.PREMIUM_PLUS) {
             return true;
         }
         return aiBrandingUsageCount < MembershipType.FREE.getAiBrandingLimit();
     }
     
     public boolean canUsePricingSuggestion() {
-        if (membershipType == MembershipType.PRO) {
+        if (membershipType == MembershipType.PREMIUM || membershipType == MembershipType.PREMIUM_PLUS) {
             return true;
         }
         return pricingSuggestionUsageCount < MembershipType.FREE.getPricingSuggestionLimit();

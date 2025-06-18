@@ -57,3 +57,6 @@ farmranding-db/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+*.log
+images/

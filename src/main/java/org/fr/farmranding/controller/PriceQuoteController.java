@@ -11,6 +11,8 @@ import org.fr.farmranding.auth.CurrentUser;
 import org.fr.farmranding.common.dto.FarmrandingResponseBody;
 import org.fr.farmranding.dto.pricequote.PriceQuoteCreateRequest;
 import org.fr.farmranding.dto.pricequote.PriceQuoteResponse;
+import org.fr.farmranding.dto.pricequote.PriceQuoteSaveRequest;
+import org.fr.farmranding.dto.pricequote.UnifiedPriceHistoryResponse;
 import org.fr.farmranding.entity.user.User;
 import org.fr.farmranding.service.PriceQuoteService;
 import org.springframework.http.HttpStatus;
@@ -44,6 +46,23 @@ public class PriceQuoteController {
                 .body(FarmrandingResponseBody.success(response));
     }
     
+    @Operation(summary = "가격 제안 결과 저장", description = "완전한 가격 제안 결과를 이력으로 저장합니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "가격 제안 결과 저장 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+        @ApiResponse(responseCode = "401", description = "인증 실패"),
+        @ApiResponse(responseCode = "403", description = "사용량 한도 초과")
+    })
+    @PostMapping("/save-result")
+    public ResponseEntity<FarmrandingResponseBody<PriceQuoteResponse>> savePriceQuoteResult(
+            @CurrentUser User currentUser,
+            @Valid @RequestBody PriceQuoteSaveRequest request) {
+        
+        PriceQuoteResponse response = priceQuoteService.savePriceQuoteResult(request, currentUser);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(FarmrandingResponseBody.success(response));
+    }
+    
     @Operation(summary = "내 가격 견적 요청 목록 조회", description = "현재 사용자의 모든 가격 견적 요청을 조회합니다.")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "조회 성공"),
@@ -57,6 +76,19 @@ public class PriceQuoteController {
         return ResponseEntity.ok(FarmrandingResponseBody.success(responses));
     }
     
+    @Operation(summary = "통합 가격 제안 이력 조회", description = "일반 가격 제안과 프리미엄 가격 제안을 통합하여 조회합니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "조회 성공"),
+        @ApiResponse(responseCode = "401", description = "인증 실패")
+    })
+    @GetMapping("/unified-history")
+    public ResponseEntity<FarmrandingResponseBody<List<UnifiedPriceHistoryResponse>>> getUnifiedPriceHistory(
+            @CurrentUser User currentUser) {
+        
+        List<UnifiedPriceHistoryResponse> responses = priceQuoteService.getUnifiedPriceHistory(currentUser);
+        return ResponseEntity.ok(FarmrandingResponseBody.success(responses));
+    }
+    
     @Operation(summary = "가격 견적 요청 상세 조회", description = "특정 가격 견적 요청의 상세 정보를 조회합니다.")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "조회 성공"),
@@ -67,7 +99,7 @@ public class PriceQuoteController {
     public ResponseEntity<FarmrandingResponseBody<PriceQuoteResponse>> getPriceQuote(
             @CurrentUser User currentUser,
             @Parameter(description = "가격 견적 요청 ID", example = "1")
-            @PathVariable Long priceQuoteId) {
+            @PathVariable("priceQuoteId") Long priceQuoteId) {
         
         PriceQuoteResponse response = priceQuoteService.getPriceQuote(priceQuoteId, currentUser);
         return ResponseEntity.ok(FarmrandingResponseBody.success(response));
@@ -83,9 +115,27 @@ public class PriceQuoteController {
     public ResponseEntity<Void> deletePriceQuote(
             @CurrentUser User currentUser,
             @Parameter(description = "가격 견적 요청 ID", example = "1")
-            @PathVariable Long priceQuoteId) {
+            @PathVariable("priceQuoteId") Long priceQuoteId) {
         
         priceQuoteService.deletePriceQuote(priceQuoteId, currentUser);
+        return ResponseEntity.noContent().build();
+    }
+    
+    @Operation(summary = "통합 가격 제안 삭제", description = "일반/프리미엄 가격 제안을 통합 삭제합니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "삭제 성공"),
+        @ApiResponse(responseCode = "401", description = "인증 실패"),
+        @ApiResponse(responseCode = "404", description = "제안을 찾을 수 없음")
+    })
+    @DeleteMapping("/unified/{id}")
+    public ResponseEntity<Void> deleteUnifiedPriceQuote(
+            @CurrentUser User currentUser,
+            @Parameter(description = "가격 제안 ID", example = "1")
+            @PathVariable("id") Long id,
+            @Parameter(description = "가격 제안 타입", example = "STANDARD")
+            @RequestParam("type") String type) {
+        
+        priceQuoteService.deleteUnifiedPriceQuote(id, type, currentUser);
         return ResponseEntity.noContent().build();
     }
 } 

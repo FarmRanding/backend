@@ -2,7 +2,9 @@ package org.fr.farmranding.service;
 
 import org.fr.farmranding.dto.pricequote.PriceQuoteCreateRequest;
 import org.fr.farmranding.dto.pricequote.PriceQuoteResponse;
+import org.fr.farmranding.dto.pricequote.PriceQuoteSaveRequest;
 import org.fr.farmranding.dto.pricequote.PriceQuoteUpdateRequest;
+import org.fr.farmranding.dto.pricequote.UnifiedPriceHistoryResponse;
 import org.fr.farmranding.entity.pricequote.PriceQuoteStatus;
 import org.fr.farmranding.entity.user.User;
 import org.springframework.data.domain.Page;
@@ -19,6 +21,11 @@ public interface PriceQuoteService {
     PriceQuoteResponse createPriceQuote(PriceQuoteCreateRequest request, User currentUser);
     
     /**
+     * 가격 제안 결과 저장 (완전한 데이터)
+     */
+    PriceQuoteResponse savePriceQuoteResult(PriceQuoteSaveRequest request, User currentUser);
+    
+    /**
      * 내 가격 견적 요청 목록 조회
      */
     List<PriceQuoteResponse> getMyPriceQuotes(User currentUser);
@@ -27,6 +34,11 @@ public interface PriceQuoteService {
      * 내 가격 견적 요청 목록 조회 (페이징)
      */
     Page<PriceQuoteResponse> getMyPriceQuotes(User currentUser, Pageable pageable);
+    
+    /**
+     * 통합된 가격 제안 이력 조회 (일반 + 프리미엄)
+     */
+    List<UnifiedPriceHistoryResponse> getUnifiedPriceHistory(User currentUser);
     
     /**
      * 상태별 가격 견적 요청 목록 조회
@@ -47,6 +59,11 @@ public interface PriceQuoteService {
      * 가격 견적 요청 삭제
      */
     void deletePriceQuote(Long priceQuoteId, User currentUser);
+    
+    /**
+     * 통합 가격 제안 삭제 (일반 + 프리미엄)
+     */
+    void deleteUnifiedPriceQuote(Long id, String type, User currentUser);
     
     /**
      * 가격 분석 시작

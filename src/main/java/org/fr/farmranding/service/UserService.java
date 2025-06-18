@@ -15,6 +15,11 @@ public interface UserService {
     UserResponse completeSignup(User currentUser, UserSignupRequest request);
     
     /**
+     * 현재 사용자 정보 조회
+     */
+    UserResponse getUserInfo(User currentUser);
+    
+    /**
      * 사용자 프로필 조회
      */
     UserProfileResponse getUserProfile(Long userId);
@@ -30,14 +35,34 @@ public interface UserService {
     UserUsageResponse getUserUsage(Long userId);
     
     /**
-     * 프로 멤버십으로 업그레이드
+     * 프리미엄 멤버십으로 업그레이드
      */
-    UserProfileResponse upgradeToProMembership(Long userId);
+    UserProfileResponse upgradeToPremiumMembership(Long userId);
+    
+    /**
+     * 프리미엄 플러스 멤버십으로 업그레이드
+     */
+    UserProfileResponse upgradeToPremiumPlusMembership(Long userId);
+    
+    /**
+     * 프리미엄 멤버십으로 다운그레이드
+     */
+    UserProfileResponse downgradeToPremiumMembership(Long userId);
+    
+    /**
+     * 무료 멤버십으로 다운그레이드
+     */
+    UserProfileResponse downgradeToFreeMembership(Long userId);
     
     /**
      * AI 브랜딩 사용량 증가
      */
     void incrementAiBrandingUsage(Long userId);
+    
+    /**
+     * AI 브랜딩 사용 가능 여부 검증 (사용량 체크)
+     */
+    void validateAiBrandingUsage(Long userId);
     
     /**
      * 가격 제안 사용량 증가
