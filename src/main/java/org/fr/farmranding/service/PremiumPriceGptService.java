@@ -49,7 +49,19 @@ public class PremiumPriceGptService {
         } catch (Exception e) {
             log.error("프리미엄 가격 제안 GPT 요청 실패: {}", e.getMessage(), e);
             
-            // BusinessException으로 변경
+            // OpenAI API Rate Limit 에러 확인 (HTTP 429, 토큰 제한 등)
+            String errorMessage = e.getMessage();
+            if (errorMessage != null && 
+                (errorMessage.contains("429") || 
+                 errorMessage.contains("rate_limit_exceeded") ||
+                 errorMessage.contains("quota") ||
+                 errorMessage.contains("insufficient_quota") ||
+                 errorMessage.contains("rate limit"))) {
+                log.error("OpenAI API 사용량 한도 초과: {}", errorMessage);
+                throw new BusinessException(FarmrandingResponseCode.AI_RATE_LIMIT_EXCEEDED);
+            }
+            
+            // 기타 AI 서비스 오류
             throw new BusinessException(FarmrandingResponseCode.AI_SERVICE_ERROR);
         }
     }
@@ -117,10 +129,10 @@ public class PremiumPriceGptService {
             - **권장 표현**: 
               * "요즘 시장에서 ~해요", "이 정도면 괜찮을 것 같아요"
               * "소매가가 높았어요", "도매가 대비 ~배 정도예요"
-         지     * "지금 시세를 보니까요", "이런 이유로 추천해요"
+              * "지금 시세를 보니까요", "이런 이유로 추천해요"
               * 모든 문장은 "~해요", "~예요", "~이에요" 등 부드러운 존댓말로 마무리
             - **예시 톤**: "작년 같은 시기 도매시장에서 애호박(20개) 14,820원이었는데 1개로 환산하면 741원, 마트에서는 1개당 1,065원 정도에 거래됐었어요. 소매가가 도매가보다 거의 1.4배 정도 높았던 상황이라서, 직거래로는 960원 정도가 적당할 것 같아요. 너무 비싸지도 않고 농부님께도 손해 안 되는 선이에요."
-            - **창의성"": 예시는 예시일 뿐이지, 항상 그런 형식을 따르지는 말고 적절한 창의를 발휘하여 설명 작성해
+            - **창의성**: 예시는 예시일 뿐이지, 항상 그런 형식을 따르지는 말고 적절한 창의를 발휘하여 설명 작성해
             
             ## 응답 형식 (JSON)
             반드시 아래 JSON 형식으로만 응답해주세요:
@@ -146,6 +158,9 @@ public class PremiumPriceGptService {
             request.getLocation()
         );
     }
+    
+
+
     
     /**
      * GPT 응답 파싱
