@@ -77,15 +77,14 @@ public record UnifiedPriceHistoryResponse(
     
     /**
      * 등급 코드를 표시명으로 변환
+     * 프론트엔드와 동일한 매핑을 사용
      */
     private static String getGradeDisplayName(String rankCode) {
         return switch (rankCode) {
-            case "01" -> "특급";
-            case "02" -> "상급";
-            case "03" -> "보통";
-            case "04" -> "중급";
-            case "05" -> "하급";
-            default -> "중급";
+            case "04" -> "상급";
+            case "05" -> "중급";
+            case "06" -> "하급";
+            default -> "상급";
         };
     }
 } 
