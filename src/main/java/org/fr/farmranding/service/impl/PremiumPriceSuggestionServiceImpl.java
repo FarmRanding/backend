@@ -118,10 +118,10 @@ public class PremiumPriceSuggestionServiceImpl implements PremiumPriceSuggestion
     }
     
     /**
-     * 프리미엄 멤버십 확인
+     * 프리미엄 플러스 멤버십 확인
      */
     private void validatePremiumMembership(User currentUser) {
-        if (!currentUser.getMembershipType().isPremiumOrAbove()) {
+        if (!currentUser.getMembershipType().isPremiumPlusMembership()) {
             throw new BusinessException(FarmrandingResponseCode.PREMIUM_MEMBERSHIP_REQUIRED);
         }
     }
