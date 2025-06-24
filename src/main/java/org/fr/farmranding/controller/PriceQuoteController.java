@@ -76,7 +76,7 @@ public class PriceQuoteController {
         return ResponseEntity.ok(FarmrandingResponseBody.success(responses));
     }
     
-    @Operation(summary = "통합 가격 제안 이력 조회", description = "일반 가격 제안과 프리미엄 가격 제안을 통합하여 조회합니다.")
+    @Operation(summary = "통합 가격 제안 이력 조회", description = "기본 가격 제안과 프리미엄 가격 제안을 통합하여 조회합니다.")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "조회 성공"),
         @ApiResponse(responseCode = "401", description = "인증 실패")

@@ -7,7 +7,7 @@ import org.springframework.data.domain.Pageable;
 
 /**
  * 통합 가격 이력 서비스 인터페이스
- * 일반 가격 제안과 프리미엄 가격 제안을 통합하여 제공
+ * 기본 가격 제안과 프리미엄 가격 제안을 통합하여 제공
  */
 public interface UnifiedPriceHistoryService {
     

@@ -80,7 +80,7 @@ public class PriceQuoteServiceImpl implements PriceQuoteService {
     public List<UnifiedPriceHistoryResponse> getUnifiedPriceHistory(User currentUser) {
         List<UnifiedPriceHistoryResponse> unifiedHistory = new ArrayList<>();
         
-        // 일반 가격 제안 조회
+        // 기본 가격 제안 조회
         List<PriceQuoteRequest> standardQuotes = priceQuoteRequestRepository.findByUserId(currentUser.getId());
         for (PriceQuoteRequest quote : standardQuotes) {
             unifiedHistory.add(UnifiedPriceHistoryResponse.fromStandard(quote));
@@ -153,7 +153,7 @@ public class PriceQuoteServiceImpl implements PriceQuoteService {
     @Override
     public void deleteUnifiedPriceQuote(Long id, String type, User currentUser) {
         if ("STANDARD".equals(type)) {
-            // 일반 가격 제안 삭제
+            // 기본 가격 제안 삭제
             PriceQuoteRequest priceQuote = priceQuoteRequestRepository.findByIdAndUserId(id, currentUser.getId())
                     .orElseThrow(() -> new BusinessException(FarmrandingResponseCode.PRICE_QUOTE_NOT_FOUND));
             

@@ -33,7 +33,7 @@ public class UnifiedPriceHistoryServiceImpl implements UnifiedPriceHistoryServic
     
     @Override
     public Page<UnifiedPriceHistoryResponse> getUnifiedPriceHistory(User currentUser, Pageable pageable) {
-        // 1. 일반 가격 제안 조회
+        // 1. 기본 가격 제안 조회
         List<PriceQuoteRequest> standardRequests = priceQuoteRequestRepository
                 .findByUserId(currentUser.getId());
         
@@ -44,7 +44,7 @@ public class UnifiedPriceHistoryServiceImpl implements UnifiedPriceHistoryServic
         // 3. 통합 리스트 생성
         List<UnifiedPriceHistoryResponse> unifiedList = new ArrayList<>();
         
-        // 일반 가격 제안 변환
+        // 기본 가격 제안 변환
         standardRequests.forEach(request -> {
             unifiedList.add(UnifiedPriceHistoryResponse.fromStandard(request));
         });

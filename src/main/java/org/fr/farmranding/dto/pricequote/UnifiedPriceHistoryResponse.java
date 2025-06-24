@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 /**
  * 통합된 가격 제안 이력 응답 DTO
- * 일반 가격 제안과 프리미엄 가격 제안을 통합하여 표시
+ * 기본 가격 제안과 프리미엄 가격 제안을 통합하여 표시
  */
 public record UnifiedPriceHistoryResponse(
         Long id,
@@ -21,7 +21,7 @@ public record UnifiedPriceHistoryResponse(
         BigDecimal suggestedPrice,
         String unit,
         Integer quantity,
-        LocalDate harvestDate, // 일반 가격 제안용
+        LocalDate harvestDate, // 기본 가격 제안용
         LocalDate analysisDate, // 프리미엄 가격 제안용
         LocalDateTime createdAt,
         
@@ -32,7 +32,7 @@ public record UnifiedPriceHistoryResponse(
 ) {
     
     /**
-     * 일반 가격 제안에서 변환
+     * 기본 가격 제안에서 변환
      */
     public static UnifiedPriceHistoryResponse fromStandard(PriceQuoteRequest priceQuote) {
         return new UnifiedPriceHistoryResponse(
@@ -40,7 +40,7 @@ public record UnifiedPriceHistoryResponse(
                 "STANDARD",
                 priceQuote.getProductName(),
                 priceQuote.getGrade(),
-                null, // 일반 가격 제안에는 지역 정보 없음
+                null, // 기본 가격 제안에는 지역 정보 없음
                 priceQuote.getFairPrice() != null ? priceQuote.getFairPrice() : priceQuote.getFinalPrice(),
                 priceQuote.getUnit(),
                 priceQuote.getQuantity(),
