@@ -103,8 +103,12 @@ public class MembershipPlan extends BaseEntity {
         return this.membershipType == MembershipType.FREE;
     }
     
-    public boolean isPro() {
-        return this.membershipType == MembershipType.PRO;
+    public boolean isPremium() {
+        return this.membershipType == MembershipType.PREMIUM;
+    }
+    
+    public boolean isPremiumPlus() {
+        return this.membershipType == MembershipType.PREMIUM_PLUS;
     }
     
     public BigDecimal getDiscountedYearlyPrice() {
@@ -120,7 +124,7 @@ public class MembershipPlan extends BaseEntity {
             BigDecimal yearlyFromMonthly = monthlyPrice.multiply(BigDecimal.valueOf(12));
             BigDecimal discount = yearlyFromMonthly.subtract(yearlyPrice);
             return discount.multiply(BigDecimal.valueOf(100))
-                    .divide(yearlyFromMonthly, 0, BigDecimal.ROUND_HALF_UP)
+                    .divide(yearlyFromMonthly, 0, java.math.RoundingMode.HALF_UP)
                     .intValue();
         }
         return 0;

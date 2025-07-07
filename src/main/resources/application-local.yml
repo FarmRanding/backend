@@ -3,6 +3,16 @@ spring:
     activate:
       on-profile: local
 
+  cloud:
+    aws:
+      credentials:
+        access-key: # 로컬에서는 비워둠
+        secret-key: # 로컬에서는 비워둠
+      region:
+        static: ap-northeast-2
+        auto: false  # 자동 region 감지 비활성화
+      stack:
+        auto: false  # CloudFormation 자동 설정 비활성화
 
   datasource:
     url: "jdbc:mysql://localhost:${MYSQL_PORT}/${MYSQL_DATABASE}"
@@ -22,3 +32,7 @@ server:
 
 farmranding:
   frontend-url: http://localhost:5174
+  image:
+    storage-type: local  # 로컬 파일 시스템 사용
+    upload-dir: ${IMAGE_URL_LOCAL}
+    base-url: ${IMAGE_BASE_URL}

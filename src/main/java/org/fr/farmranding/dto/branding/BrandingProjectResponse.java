@@ -3,6 +3,8 @@ package org.fr.farmranding.dto.branding;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.fr.farmranding.entity.branding.BrandingProject;
 import org.fr.farmranding.entity.branding.Grade;
+import org.fr.farmranding.entity.branding.ImageGenerationStatus;
+import org.fr.farmranding.entity.user.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -40,20 +42,36 @@ public record BrandingProjectResponse(
         @Schema(description = "로고 이미지 키워드", example = "[\"심플한\", \"모던한\", \"밝은\"]")
         List<String> logoImageKeywords,
         
-        @Schema(description = "GAP 인증번호", example = "GAP-2024-001")
+        @Schema(description = "GAP 인증번호", example = "1234567")
         String gapNumber,
         
         @Schema(description = "GAP 인증 여부", example = "true")
         Boolean isGapVerified,
         
-        @Schema(description = "홍보 문구", example = "김씨농장 프리미엄 토마토와 함께하는 건강한 삶")
-        String promotionText,
+        @Schema(description = "GAP 인증 기관명", example = "글로벌유농인")
+        String gapInstitutionName,
         
-        @Schema(description = "브랜드 스토리", example = "3대째 이어온 전통 농법으로 정성스럽게 키운 프리미엄 토마토입니다.")
+        @Schema(description = "GAP 인증 품목명", example = "토마토")
+        String gapProductName,
+        
+        @Schema(description = "생성된 브랜드명", example = "뽀사과")
+        String generatedBrandName,
+        
+        @Schema(description = "홍보 문구", example = "김씨농장 프리미엄 토마토와 함께하는 건강한 삶")
+        String brandConcept,
+        
+        @Schema(description = "브랜드 스토리 (판매글)", example = "3대째 이어온 전통 농법으로 정성스럽게 키운 프리미엄 토마토입니다.")
         String brandStory,
         
         @Schema(description = "브랜드 이미지 URL", example = "https://storage.farmranding.com/brands/12345.png")
         String brandImageUrl,
+        
+        @Schema(description = "이미지 생성 상태", example = "COMPLETED", 
+               allowableValues = {"PENDING", "PROCESSING", "COMPLETED", "FAILED"})
+        ImageGenerationStatus imageGenerationStatus,
+        
+        @Schema(description = "브랜드 스토리(판매글) 접근 가능 여부", example = "true")
+        Boolean canAccessBrandStory,
         
         @Schema(description = "생성일시", example = "2024-01-15T10:30:00")
         LocalDateTime createdAt,
@@ -61,6 +79,35 @@ public record BrandingProjectResponse(
         @Schema(description = "수정일시", example = "2024-01-15T15:20:00")
         LocalDateTime updatedAt
 ) {
+    public static BrandingProjectResponse from(BrandingProject project, User currentUser) {
+        boolean canAccess = currentUser.getMembershipType().isCanAccessSalesContent();
+        
+        return new BrandingProjectResponse(
+                project.getId(),
+                project.getTitle(),
+                project.getUser().getId(),
+                project.getCropName(),
+                project.getVariety(),
+                project.getCultivationMethod(),
+                project.getGrade(),
+                project.getBrandingKeywords(),
+                project.getCropAppealKeywords(),
+                project.getLogoImageKeywords(),
+                project.getGapNumber(),
+                project.getIsGapVerified(),
+                project.getGapInstitutionName(),
+                project.getGapProductName(),
+                project.getGeneratedBrandName(),
+                project.getBrandConcept(),
+                project.getBrandStory(),
+                project.getBrandImageUrl(),
+                project.getImageGenerationStatus(),
+                canAccess,
+                project.getCreatedAt(),
+                project.getUpdatedAt()
+        );
+    }
+    
     public static BrandingProjectResponse from(BrandingProject project) {
         return new BrandingProjectResponse(
                 project.getId(),
@@ -75,9 +122,14 @@ public record BrandingProjectResponse(
                 project.getLogoImageKeywords(),
                 project.getGapNumber(),
                 project.getIsGapVerified(),
+                project.getGapInstitutionName(),
+                project.getGapProductName(),
                 project.getGeneratedBrandName(),
-                project.getPromotionText(),
+                project.getBrandConcept(),
                 project.getBrandStory(),
+                project.getBrandImageUrl(),
+                project.getImageGenerationStatus(),
+                false,
                 project.getCreatedAt(),
                 project.getUpdatedAt()
         );

@@ -21,9 +21,9 @@ public interface PriceQuoteRequestRepository extends JpaRepository<PriceQuoteReq
     
     List<PriceQuoteRequest> findByUserIdAndStatus(Long userId, PriceQuoteStatus status);
     
-    @Query("SELECT p FROM PriceQuoteRequest p WHERE p.user.id = :userId AND p.cropName LIKE %:keyword%")
-    List<PriceQuoteRequest> findByUserIdAndCropNameContaining(@Param("userId") Long userId, 
-                                                             @Param("keyword") String keyword);
+    @Query("SELECT p FROM PriceQuoteRequest p WHERE p.user.id = :userId AND p.productName LIKE %:keyword%")
+    List<PriceQuoteRequest> findByUserIdAndProductNameContaining(@Param("userId") Long userId, 
+                                                                @Param("keyword") String keyword);
     
     @Query("SELECT p FROM PriceQuoteRequest p WHERE p.user.id = :userId ORDER BY p.createdAt DESC")
     List<PriceQuoteRequest> findRecentByUserId(@Param("userId") Long userId, Pageable pageable);
