@@ -6,11 +6,14 @@ import org.fr.farmranding.common.exception.BusinessException;
 import org.fr.farmranding.common.code.FarmrandingResponseCode;
 import org.fr.farmranding.dto.request.UserSignupRequest;
 import org.fr.farmranding.dto.response.UserResponse;
+import org.fr.farmranding.dto.response.AuthResponse;
 import org.fr.farmranding.dto.user.UserProfileResponse;
 import org.fr.farmranding.dto.user.UserProfileUpdateRequest;
 import org.fr.farmranding.dto.user.UserUsageResponse;
 import org.fr.farmranding.entity.user.User;
+import org.fr.farmranding.entity.user.MembershipType;
 import org.fr.farmranding.repository.UserRepository;
+import org.fr.farmranding.jwt.JwtService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +24,50 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
     
     private final UserRepository userRepository;
+    private final JwtService jwtService;
+    
+    private static final String TEST_PASSWORD = "gongmoTest";
+    private static final String TEST_EMAIL = "test@farmranding.com";
+    
+    @Override
+    public AuthResponse testLogin(String password) {
+        // 암호 검증
+        if (!TEST_PASSWORD.equals(password)) {
+            log.warn("테스트 로그인 실패 - 잘못된 암호");
+            throw new BusinessException(FarmrandingResponseCode.VALIDATION_ERROR, "잘못된 암호입니다.");
+        }
+        
+        // 기존 테스트 계정 조회 또는 생성
+        User testUser = userRepository.findByEmail(TEST_EMAIL)
+                .orElseGet(() -> {
+                    log.info("테스트 계정 생성 중...");
+                    User newTestUser = User.builder()
+                            .email(TEST_EMAIL)
+                            .name("테스트 사용자")
+                            .providerId("test-user-001")
+                            .membershipType(MembershipType.PREMIUM_PLUS) // 모든 기능 사용 가능
+                            .farmName("팜랜딩 테스트 농장")
+                            .location("서울특별시 강남구")
+                            .build();
+                    return userRepository.save(newTestUser);
+                });
+        
+        // 기존 사용자면 농장 정보가 있으므로 신규 사용자가 아님
+        boolean isNewUser = testUser.getFarmName() == null || testUser.getFarmName().trim().isEmpty();
+        
+        // JWT 토큰 생성
+        String accessToken = jwtService.generateAccessToken(testUser);
+        String refreshToken = jwtService.generateRefreshToken(testUser);
+        
+        log.info("테스트 로그인 성공 - userId: {}, email: {}", testUser.getId(), testUser.getEmail());
+        
+        return new AuthResponse(
+                accessToken,
+                refreshToken,
+                UserResponse.from(testUser),
+                isNewUser
+        );
+    }
     
     @Override
     public UserResponse completeSignup(User currentUser, UserSignupRequest request) {

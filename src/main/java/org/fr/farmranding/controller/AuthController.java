@@ -10,8 +10,10 @@ import org.fr.farmranding.auth.CurrentUser;
 import org.fr.farmranding.common.dto.FarmrandingResponseBody;
 import org.fr.farmranding.dto.request.RefreshTokenRequest;
 import org.fr.farmranding.dto.request.UserSignupRequest;
+import org.fr.farmranding.dto.request.TestLoginRequest;
 import org.fr.farmranding.dto.response.TokenResponse;
 import org.fr.farmranding.dto.response.UserResponse;
+import org.fr.farmranding.dto.response.AuthResponse;
 import org.fr.farmranding.entity.user.User;
 import org.fr.farmranding.jwt.JwtService;
 import org.fr.farmranding.service.UserService;
@@ -35,6 +37,21 @@ public class AuthController {
     public ResponseEntity<FarmrandingResponseBody<String>> kakaoLogin() {
         String loginUrl = "/oauth2/authorization/kakao";
         return ResponseEntity.ok(FarmrandingResponseBody.success(loginUrl));
+    }
+    
+    @Operation(summary = "테스트 로그인", description = "평가용 테스트 계정으로 로그인합니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "테스트 로그인 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 암호")
+    })
+    @PostMapping("/test")
+    public ResponseEntity<FarmrandingResponseBody<AuthResponse>> testLogin(
+            @Valid @RequestBody TestLoginRequest request) {
+        
+        log.info("테스트 로그인 시도");
+        
+        AuthResponse response = userService.testLogin(request.password());
+        return ResponseEntity.ok(FarmrandingResponseBody.success(response));
     }
     
     @Operation(summary = "신규 유저 정보 저장", description = "OAuth2 로그인 후 신규 유저의 농장 정보를 저장합니다.")
